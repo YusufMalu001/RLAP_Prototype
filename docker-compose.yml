@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: rlap-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: rlap
+      POSTGRES_PASSWORD: rlap
+      POSTGRES_DB: rlap
+    ports:
+      - "5432:5432"
+    volumes:
+      - rlap_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rlap -d rlap"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  rlap_postgres_data:

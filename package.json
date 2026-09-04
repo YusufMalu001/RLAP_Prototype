@@ -1,0 +1,31 @@
+{
+  "name": "rlap",
+  "private": true,
+  "version": "0.0.1",
+  "description": "RLAP — patient booking platform for diagnostics (radiology + lab)",
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter=./apps/* dev",
+    "build": "pnpm -r --filter=./apps/* build",
+    "lint": "pnpm -r run lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm -r run typecheck",
+    "db:generate": "pnpm --filter @rlap/db run generate",
+    "db:migrate": "pnpm --filter @rlap/db run migrate",
+    "db:seed": "pnpm --filter @rlap/db run seed",
+    "db:studio": "pnpm --filter @rlap/db run studio"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.3",
+    "prettier-plugin-tailwindcss": "^0.6.6",
+    "typescript": "^5.5.4"
+  },
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=18.18.0"
+  }
+}
