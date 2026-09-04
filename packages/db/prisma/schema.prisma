@@ -1,0 +1,540 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================================================
+// Enums
+// =============================================================================
+
+enum PaymentMode {
+  ONLINE_ONLY
+  ONLINE_AND_RECEPTION
+}
+
+enum Modality {
+  ULTRASOUND
+  XRAY
+  CT
+  MRI
+  ECG
+}
+
+// Radiology body-part taxonomy from the widget spec (§4.2, screen R2).
+enum BodyPartCategory {
+  HEAD_NECK
+  CHEST_CARDIAC
+  ABDOMEN_PELVIS
+  SPINE
+  UPPER_LIMB
+  LOWER_LIMB
+  WHOLE_BODY
+}
+
+enum SlotType {
+  RADIOLOGY
+  LAB
+  HOME_COLLECTION_WINDOW
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum BookingType {
+  RADIOLOGY
+  LAB
+  COMBINED
+}
+
+// COMPLETED is not in the literal entity list from the schema request, but §5.7 of the
+// spec requires distinguishing "underlying service completed" from CONFIRMED — reports
+// and invoices only unlock at that point, so the schema needs a status that captures it.
+enum BookingStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  ONLINE
+  PAY_AT_RECEPTION
+}
+
+// Nullable on Booking: doesn't apply to Radiology-only bookings (always a centre visit).
+enum CollectionMode {
+  CENTRE_VISIT
+  HOME_COLLECTION
+}
+
+enum LineItemType {
+  RADIOLOGY_EXAM
+  LAB_TEST
+}
+
+enum LineItemSource {
+  MANUAL
+  OCR
+}
+
+enum OcrConfidence {
+  HIGH
+  LOW
+}
+
+// =============================================================================
+// Tenant & catalogue
+// =============================================================================
+
+/// A diagnostic organization (tenant) — standalone lab, radiology centre, chain, or hospital.
+model Organization {
+  id   String @id @default(cuid())
+  name String
+  slug String @unique
+
+  // Branding config
+  logoUrl      String?
+  primaryColor String?
+
+  // Payment mode config — controls whether Pay at Reception can ever be offered (§5.5).
+  paymentMode PaymentMode @default(ONLINE_AND_RECEPTION)
+
+  // Notification config — SMS is always sent per §5.8, so no toggle for it; email and
+  // WhatsApp are opt-in per tenant. Reminders (§5.8: "reminder notifications are
+  // configurable per organization") are a separate toggle from the booking-confirmation
+  // send above — a tenant can want a confirmation without pre-appointment reminders, or vice versa.
+  emailNotificationsEnabled    Boolean @default(false)
+  whatsappNotificationsEnabled Boolean @default(true)
+  remindersEnabled             Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  centres          Centre[]
+  radiologyExams   RadiologyExam[]
+  labTests         LabTest[]
+  serviceableAreas ServiceableArea[]
+  patients         Patient[]
+  bookings         Booking[]
+  otpVerifications OtpVerification[]
+  slotHolds        SlotHold[]
+  adminUsers       AdminUser[]
+  upsellRules      CatalogueUpsellRule[]
+}
+
+/// A physical centre belonging to an Organization.
+model Centre {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  name    String
+  address String
+  city    String
+  area    String
+  lat     Float?
+  lng     Float?
+
+  offersRadiology Boolean @default(false)
+  offersLab       Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  catalogueRadiologyExams CentreRadiologyExam[]
+  catalogueLabTests       CentreLabTest[]
+  serviceableAreas        ServiceableArea[]
+  slots                   Slot[]
+  bookings                Booking[]
+
+  @@index([organizationId])
+  @@index([organizationId, city, area])
+}
+
+/// A radiology exam offered by an Organization (before per-centre availability/pricing).
+model RadiologyExam {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  name                    String
+  modality                Modality
+  bodyPartCategory        BodyPartCategory
+  // True for MRI and contrast-based studies — drives the safety/eligibility check (§2.3, §5.9).
+  requiresSafetyCheck     Boolean          @default(false)
+  preparationInstructions String?          @db.Text
+  price                   Decimal          @db.Decimal(10, 2)
+  // False for prepaid-only exams (e.g. high-value scans) — a single ineligible line item
+  // makes pay-at-reception unavailable for the whole cart, never partially applied (§5.5, §3.9).
+  payAtReceptionEligible  Boolean          @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  centreOfferings CentreRadiologyExam[]
+  lineItems       BookingLineItem[]
+
+  @@index([organizationId])
+  @@index([organizationId, modality])
+}
+
+/// A lab/pathology test or package offered by an Organization.
+model LabTest {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  name                    String
+  category                String
+  isPackage               Boolean  @default(false)
+  includedParameters      String[]
+  preparationInstructions String?  @db.Text
+  price                   Decimal  @db.Decimal(10, 2)
+  homeCollectionEligible  Boolean  @default(false)
+  // Same mixed-cart rule as RadiologyExam.payAtReceptionEligible (§5.5, §3.9).
+  payAtReceptionEligible  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  centreOfferings CentreLabTest[]
+  lineItems       BookingLineItem[]
+
+  @@index([organizationId])
+  @@index([organizationId, category])
+}
+
+/// Centre <-> RadiologyExam availability, with optional per-centre price override.
+/// Together with CentreLabTest below, this is "the centre catalogue" — split into two
+/// tables (rather than one polymorphic join) so each relation keeps real FK integrity.
+model CentreRadiologyExam {
+  id              String        @id @default(cuid())
+  centreId        String
+  centre          Centre        @relation(fields: [centreId], references: [id])
+  radiologyExamId String
+  radiologyExam   RadiologyExam @relation(fields: [radiologyExamId], references: [id])
+
+  priceOverride Decimal? @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([centreId, radiologyExamId])
+  @@index([radiologyExamId])
+}
+
+/// Centre <-> LabTest availability, with optional per-centre price override.
+model CentreLabTest {
+  id        String  @id @default(cuid())
+  centreId  String
+  centre    Centre  @relation(fields: [centreId], references: [id])
+  labTestId String
+  labTest   LabTest @relation(fields: [labTestId], references: [id])
+
+  priceOverride Decimal? @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([centreId, labTestId])
+  @@index([labTestId])
+}
+
+/// PIN codes serviceable for home collection. Scoped to an Organization, optionally
+/// narrowed to a single Centre when pricing/catchment varies by branch (§4.2, L5a).
+model ServiceableArea {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  centreId       String?
+  centre         Centre?      @relation(fields: [centreId], references: [id])
+
+  pinCode              String
+  homeCollectionCharge Decimal @db.Decimal(10, 2)
+  isActive             Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId, pinCode])
+  @@index([centreId, pinCode])
+}
+
+// =============================================================================
+// Scheduling
+// =============================================================================
+
+/// A bookable slot (or home-collection window) at a Centre.
+model Slot {
+  id       String @id @default(cuid())
+  centreId String
+  centre   Centre @relation(fields: [centreId], references: [id])
+
+  type        SlotType
+  date        DateTime @db.Date
+  startTime   DateTime @db.Time
+  endTime     DateTime @db.Time
+  capacity    Int
+  bookedCount Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookingSlots BookingSlot[]
+  slotHolds    SlotHold[]
+
+  @@unique([centreId, type, date, startTime])
+  @@index([centreId, date, type])
+}
+
+/// A short-lived hold on a Slot while a patient is mid-checkout, before any Booking
+/// exists yet — keyed by the widget's session/cart token rather than a Booking row.
+model SlotHold {
+  id             String       @id @default(cuid())
+  cartToken      String
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  slotId         String
+  slot           Slot         @relation(fields: [slotId], references: [id], onDelete: Cascade)
+
+  // Set to now() + 10 minutes at creation time per §5.9.
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@unique([cartToken, slotId])
+  @@index([cartToken])
+  @@index([expiresAt])
+}
+
+// =============================================================================
+// Patients & identity
+// =============================================================================
+
+model Patient {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  mobileNumber String
+  // Nullable: a Patient row is created as soon as a mobile number is OTP-verified (§3.6),
+  // before the patient has entered any details — these fill in once SC5 is submitted.
+  name         String?
+  // Widget screen SC5 collects a single "DOB or Age" field — stored as entered.
+  dobOrAge     String?
+  gender       Gender?
+  email        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings Booking[]
+
+  @@unique([organizationId, mobileNumber])
+}
+
+/// OTP challenges for mobile verification (§3.6). Scoped per-organization since the
+/// same mobile number can hold independent patient records on different tenants (§7.1
+/// multi-tenant-safe requirement) and shouldn't cross-verify between them.
+model OtpVerification {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  mobileNumber String
+  otpCode      String
+  expiresAt    DateTime
+  verified     Boolean  @default(false)
+  attemptCount Int      @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([organizationId, mobileNumber])
+}
+
+// =============================================================================
+// Bookings
+// =============================================================================
+
+model Booking {
+  id          String @id @default(cuid())
+  // Human-readable reference shown to the patient, e.g. "RLAP-A1B2C3" (§4.2, SC8).
+  bookingCode String @unique
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  patientId      String
+  patient        Patient      @relation(fields: [patientId], references: [id])
+  centreId       String
+  centre         Centre       @relation(fields: [centreId], references: [id])
+
+  type           BookingType
+  status         BookingStatus   @default(PENDING_PAYMENT)
+  paymentMethod  PaymentMethod
+  // Null for Radiology-only bookings; Combined bookings are always CENTRE_VISIT (§2.3).
+  collectionMode CollectionMode?
+  totalAmount    Decimal         @db.Decimal(10, 2)
+
+  // Null until the reminder sweep sends one — dedup marker, not a feature flag (§5.8).
+  reminderSentAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lineItems            BookingLineItem[]
+  bookingSlots         BookingSlot[]
+  safetyCheckResponses SafetyCheckResponse[]
+  sentNotifications    SentNotification[]
+
+  @@index([organizationId])
+  @@index([patientId])
+  @@index([centreId])
+  @@index([organizationId, status])
+}
+
+/// A single cart line within a Booking. Not a true polymorphic table — an explicit
+/// type discriminator plus two nullable FKs, exactly one of which is populated to
+/// match itemType (enforced in the application layer, not the schema).
+model BookingLineItem {
+  id        String  @id @default(cuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  itemType        LineItemType
+  radiologyExamId String?
+  radiologyExam   RadiologyExam? @relation(fields: [radiologyExamId], references: [id])
+  labTestId       String?
+  labTest         LabTest?       @relation(fields: [labTestId], references: [id])
+
+  priceAtBooking Decimal        @db.Decimal(10, 2)
+  source         LineItemSource @default(MANUAL)
+  // Only meaningful when source = OCR.
+  ocrConfidence  OcrConfidence?
+
+  createdAt DateTime @default(now())
+
+  @@index([bookingId])
+  @@index([radiologyExamId])
+  @@index([labTestId])
+}
+
+/// Join between Booking and Slot. A Combined booking has exactly two rows — one
+/// RADIOLOGY slot, one LAB slot — enforced here by denormalizing the slot's type and
+/// uniquing on (bookingId, slotType), matching the "dual, independent slots" rule (§2.3).
+model BookingSlot {
+  id        String   @id @default(cuid())
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  slotId    String
+  slot      Slot     @relation(fields: [slotId], references: [id])
+  slotType  SlotType
+
+  createdAt DateTime @default(now())
+
+  @@unique([bookingId, slotType])
+  @@index([slotId])
+}
+
+/// One answer row per safety/eligibility question (§2.3, §4.2 R7/C3), triggered when
+/// the booking includes an MRI or contrast-based exam.
+model SafetyCheckResponse {
+  id        String  @id @default(cuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  questionKey String
+  answer      String
+  flagged     Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([bookingId])
+}
+
+enum NotificationChannel {
+  SMS
+  EMAIL
+  WHATSAPP
+}
+
+/// A record of every SMS/email/WhatsApp send (§5.8, §6.3) — written by the mock
+/// notification provider today, read by the admin portal later to show send history.
+model SentNotification {
+  id        String  @id @default(cuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  channel NotificationChannel
+  to      String
+  subject String?
+  body    String              @db.Text
+
+  sentAt DateTime @default(now())
+
+  @@index([bookingId])
+}
+
+// =============================================================================
+// Admin portal (§6.2 "Admin Portal APIs", §7.2) — separate identity from Patient;
+// an AdminUser manages exactly one Organization's catalogue, centres, slots and
+// bookings, matching every other org-scoped model in this schema.
+// =============================================================================
+
+model AdminUser {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  email        String @unique
+  passwordHash String
+  name         String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions AdminSession[]
+
+  @@index([organizationId])
+}
+
+/// A logged-in admin session, keyed by an opaque bearer token carried in a signed,
+/// httpOnly cookie — deliberately simple (§ task brief: "basic session auth ... don't
+/// build a real IAM system"), same ephemeral-token shape as PatientSession but persisted
+/// to the DB (rather than in-memory) since admins expect to survive an API restart.
+model AdminSession {
+  id          String    @id @default(cuid())
+  token       String    @unique
+  adminUserId String
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+
+  @@index([adminUserId])
+}
+
+/// STUB — package/bundle upsell rules are referenced in the spec (§6.2 "package upsell
+/// rules", §7.2) but the upsell threshold itself is an open item with no business
+/// sign-off yet (§8). This model only reserves the shape; nothing in the app reads or
+/// writes it, and the admin portal exposes no screen for it. Do not wire this up until
+/// product/business confirms the actual threshold and rule logic.
+model CatalogueUpsellRule {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  name     String
+  isActive Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+}
