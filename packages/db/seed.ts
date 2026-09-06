@@ -9,7 +9,7 @@ import {
   type RadiologyExam,
   type LabTest,
   type Centre,
-} from "./generated/client";
+} from "./generated/client/index.js";
 
 const prisma = new PrismaClient();
 
@@ -167,6 +167,425 @@ const RADIOLOGY_EXAMS: Array<{
     preparationInstructions:
       "Wear comfortable clothing and shoes suitable for walking on a treadmill.",
     price: 1800,
+  },
+  {
+    name: "2D Echocardiogram",
+    modality: "ECG",
+    bodyPartCategory: "CHEST_CARDIAC",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 2200,
+  },
+  {
+    name: "Holter Monitoring (24 hr)",
+    modality: "ECG",
+    bodyPartCategory: "CHEST_CARDIAC",
+    requiresSafetyCheck: false,
+    preparationInstructions: "Avoid bathing while electrodes are attached for the 24-hour period.",
+    price: 2500,
+  },
+  // --- Ultrasound: more coverage across head/neck, chest, limbs, whole body ---
+  {
+    name: "USG Thyroid & Neck",
+    modality: "ULTRASOUND",
+    bodyPartCategory: "HEAD_NECK",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 900,
+  },
+  {
+    name: "Carotid Doppler",
+    modality: "ULTRASOUND",
+    bodyPartCategory: "HEAD_NECK",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 1600,
+  },
+  {
+    name: "USG Chest / Pleural Effusion Study",
+    modality: "ULTRASOUND",
+    bodyPartCategory: "CHEST_CARDIAC",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 1100,
+  },
+  {
+    name: "USG Breast (Bilateral)",
+    modality: "ULTRASOUND",
+    bodyPartCategory: "CHEST_CARDIAC",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 1300,
+  },
+  {
+    name: "USG Scrotum / Testicular Doppler",
+    modality: "ULTRASOUND",
+    bodyPartCategory: "ABDOMEN_PELVIS",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 1200,
+  },
+  {
+    name: "Obstetric USG (Pregnancy Dating)",
+    modality: "ULTRASOUND",
+    bodyPartCategory: "ABDOMEN_PELVIS",
+    requiresSafetyCheck: false,
+    preparationInstructions: "Arrive with a comfortably full bladder.",
+    price: 1300,
+  },
+  {
+    name: "Anomaly Scan (Level II Obstetric USG)",
+    modality: "ULTRASOUND",
+    bodyPartCategory: "ABDOMEN_PELVIS",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 2200,
+  },
+  {
+    name: "USG Shoulder Joint",
+    modality: "ULTRASOUND",
+    bodyPartCategory: "UPPER_LIMB",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 1400,
+  },
+  {
+    name: "USG Wrist & Hand",
+    modality: "ULTRASOUND",
+    bodyPartCategory: "UPPER_LIMB",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 1200,
+  },
+  {
+    name: "USG Knee Joint",
+    modality: "ULTRASOUND",
+    bodyPartCategory: "LOWER_LIMB",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 1300,
+  },
+  {
+    name: "Venous Doppler Lower Limb (DVT Study)",
+    modality: "ULTRASOUND",
+    bodyPartCategory: "LOWER_LIMB",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 1800,
+  },
+  {
+    name: "Arterial Doppler Lower Limb",
+    modality: "ULTRASOUND",
+    bodyPartCategory: "LOWER_LIMB",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 1900,
+  },
+  {
+    name: "Whole Abdomen + Pelvis Doppler",
+    modality: "ULTRASOUND",
+    bodyPartCategory: "WHOLE_BODY",
+    requiresSafetyCheck: false,
+    preparationInstructions: "Fasting for 6 hours prior to the scan is recommended.",
+    price: 2400,
+  },
+  // --- X-Ray: head/neck, abdomen, upper limb, whole body ---
+  {
+    name: "X-Ray Skull AP/Lateral",
+    modality: "XRAY",
+    bodyPartCategory: "HEAD_NECK",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 550,
+  },
+  {
+    name: "X-Ray Cervical Spine",
+    modality: "XRAY",
+    bodyPartCategory: "HEAD_NECK",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 600,
+  },
+  {
+    name: "X-Ray Abdomen Erect",
+    modality: "XRAY",
+    bodyPartCategory: "ABDOMEN_PELVIS",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 550,
+  },
+  {
+    name: "X-Ray Pelvis AP View",
+    modality: "XRAY",
+    bodyPartCategory: "ABDOMEN_PELVIS",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 550,
+  },
+  {
+    name: "X-Ray Shoulder Joint",
+    modality: "XRAY",
+    bodyPartCategory: "UPPER_LIMB",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 500,
+  },
+  {
+    name: "X-Ray Wrist Joint (Both)",
+    modality: "XRAY",
+    bodyPartCategory: "UPPER_LIMB",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 550,
+  },
+  {
+    name: "X-Ray Elbow Joint",
+    modality: "XRAY",
+    bodyPartCategory: "UPPER_LIMB",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 500,
+  },
+  {
+    name: "X-Ray Forearm (Radius-Ulna)",
+    modality: "XRAY",
+    bodyPartCategory: "UPPER_LIMB",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 500,
+  },
+  {
+    name: "X-Ray Humerus",
+    modality: "XRAY",
+    bodyPartCategory: "UPPER_LIMB",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 500,
+  },
+  {
+    name: "X-Ray Hand (Both)",
+    modality: "XRAY",
+    bodyPartCategory: "UPPER_LIMB",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 500,
+  },
+  {
+    name: "X-Ray Finger(s)",
+    modality: "XRAY",
+    bodyPartCategory: "UPPER_LIMB",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 450,
+  },
+  {
+    name: "X-Ray Ankle Joint (Both)",
+    modality: "XRAY",
+    bodyPartCategory: "LOWER_LIMB",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 550,
+  },
+  {
+    name: "X-Ray Hip Joint",
+    modality: "XRAY",
+    bodyPartCategory: "LOWER_LIMB",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 600,
+  },
+  {
+    name: "X-Ray Foot (Both)",
+    modality: "XRAY",
+    bodyPartCategory: "LOWER_LIMB",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 500,
+  },
+  {
+    name: "X-Ray Femur",
+    modality: "XRAY",
+    bodyPartCategory: "LOWER_LIMB",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 550,
+  },
+  {
+    name: "X-Ray Leg (Tibia-Fibula)",
+    modality: "XRAY",
+    bodyPartCategory: "LOWER_LIMB",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 550,
+  },
+  {
+    name: "X-Ray Toe(s)",
+    modality: "XRAY",
+    bodyPartCategory: "LOWER_LIMB",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 450,
+  },
+  {
+    name: "X-Ray Whole Spine (Scoliosis Series)",
+    modality: "XRAY",
+    bodyPartCategory: "WHOLE_BODY",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 900,
+  },
+  // --- CT: expanded coverage ---
+  {
+    name: "CT Paranasal Sinus (PNS)",
+    modality: "CT",
+    bodyPartCategory: "HEAD_NECK",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 3400,
+  },
+  {
+    name: "CT Angiography Brain (CTA)",
+    modality: "CT",
+    bodyPartCategory: "HEAD_NECK",
+    requiresSafetyCheck: true,
+    preparationInstructions: "Fast for 4-6 hours before the scan. Inform staff of any allergies.",
+    price: 8500,
+    payAtReceptionEligible: false,
+  },
+  {
+    name: "HRCT Chest",
+    modality: "CT",
+    bodyPartCategory: "CHEST_CARDIAC",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 4200,
+  },
+  {
+    name: "CT Pelvis Contrast",
+    modality: "CT",
+    bodyPartCategory: "ABDOMEN_PELVIS",
+    requiresSafetyCheck: true,
+    preparationInstructions:
+      "Fast for 4-6 hours before the scan. Inform the technician of any known allergies.",
+    price: 5200,
+    payAtReceptionEligible: false,
+  },
+  {
+    name: "CT KUB (Urinary Tract Stone Protocol)",
+    modality: "CT",
+    bodyPartCategory: "ABDOMEN_PELVIS",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 3800,
+  },
+  {
+    name: "CT Spine Lumbar",
+    modality: "CT",
+    bodyPartCategory: "SPINE",
+    requiresSafetyCheck: false,
+    preparationInstructions: null,
+    price: 4500,
+  },
+  {
+    name: "CT Whole Body (Trauma / Staging Protocol)",
+    modality: "CT",
+    bodyPartCategory: "WHOLE_BODY",
+    requiresSafetyCheck: true,
+    preparationInstructions:
+      "Fast for 4-6 hours before the scan. Inform the technician of any known allergies.",
+    price: 12500,
+    payAtReceptionEligible: false,
+  },
+  // --- MRI: expanded coverage ---
+  {
+    name: "MRI Brain Contrast",
+    modality: "MRI",
+    bodyPartCategory: "HEAD_NECK",
+    requiresSafetyCheck: true,
+    preparationInstructions:
+      "Remove all metallic objects before the scan. Inform staff of any implants or pacemaker.",
+    price: 8200,
+    payAtReceptionEligible: false,
+  },
+  {
+    name: "MRI Cervical Spine",
+    modality: "MRI",
+    bodyPartCategory: "HEAD_NECK",
+    requiresSafetyCheck: true,
+    preparationInstructions:
+      "Remove all metallic objects before the scan. Inform staff of any implants or pacemaker.",
+    price: 7200,
+    payAtReceptionEligible: false,
+  },
+  {
+    name: "MRI Cardiac",
+    modality: "MRI",
+    bodyPartCategory: "CHEST_CARDIAC",
+    requiresSafetyCheck: true,
+    preparationInstructions:
+      "Remove all metallic objects before the scan. Inform staff of any implants or pacemaker.",
+    price: 11500,
+    payAtReceptionEligible: false,
+  },
+  {
+    name: "MRI Whole Abdomen",
+    modality: "MRI",
+    bodyPartCategory: "ABDOMEN_PELVIS",
+    requiresSafetyCheck: true,
+    preparationInstructions:
+      "Fast for 4-6 hours prior. Remove all metallic objects before the scan.",
+    price: 8800,
+    payAtReceptionEligible: false,
+  },
+  {
+    name: "MRI Pelvis",
+    modality: "MRI",
+    bodyPartCategory: "ABDOMEN_PELVIS",
+    requiresSafetyCheck: true,
+    preparationInstructions:
+      "Remove all metallic objects before the scan. Inform staff of any implants or pacemaker.",
+    price: 8000,
+    payAtReceptionEligible: false,
+  },
+  {
+    name: "MRI Shoulder Joint",
+    modality: "MRI",
+    bodyPartCategory: "UPPER_LIMB",
+    requiresSafetyCheck: true,
+    preparationInstructions:
+      "Remove all metallic objects before the scan. Inform staff of any implants or pacemaker.",
+    price: 6900,
+    payAtReceptionEligible: false,
+  },
+  {
+    name: "MRI Wrist Joint",
+    modality: "MRI",
+    bodyPartCategory: "UPPER_LIMB",
+    requiresSafetyCheck: true,
+    preparationInstructions:
+      "Remove all metallic objects before the scan. Inform staff of any implants or pacemaker.",
+    price: 6500,
+    payAtReceptionEligible: false,
+  },
+  {
+    name: "MRI Ankle Joint",
+    modality: "MRI",
+    bodyPartCategory: "LOWER_LIMB",
+    requiresSafetyCheck: true,
+    preparationInstructions:
+      "Remove all metallic objects before the scan. Inform staff of any implants or pacemaker.",
+    price: 6700,
+    payAtReceptionEligible: false,
+  },
+  {
+    name: "MRI Whole Spine Screening",
+    modality: "MRI",
+    bodyPartCategory: "WHOLE_BODY",
+    requiresSafetyCheck: true,
+    preparationInstructions:
+      "Remove all metallic objects before the scan. Inform staff of any implants or pacemaker.",
+    price: 13500,
+    payAtReceptionEligible: false,
   },
 ];
 
@@ -371,6 +790,322 @@ const LAB_TESTS: Array<{
     price: 999,
     homeCollectionEligible: true,
   },
+  // --- Biochemistry: additional individual tests ---
+  {
+    name: "Uric Acid",
+    category: "Biochemistry",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 250,
+    homeCollectionEligible: true,
+  },
+  {
+    name: "Calcium (Serum)",
+    category: "Biochemistry",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 300,
+    homeCollectionEligible: true,
+  },
+  {
+    name: "Electrolytes (Na, K, Cl)",
+    category: "Biochemistry",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 450,
+    homeCollectionEligible: true,
+  },
+  {
+    name: "Iron Studies (Serum Iron, TIBC, Ferritin)",
+    category: "Biochemistry",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: "8 hours fasting recommended.",
+    price: 1100,
+    homeCollectionEligible: true,
+  },
+  {
+    name: "Amylase & Lipase",
+    category: "Biochemistry",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 650,
+    homeCollectionEligible: false,
+  },
+  // --- Endocrinology ---
+  {
+    name: "Free T3, Free T4, TSH (Sensitive)",
+    category: "Endocrinology",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 750,
+    homeCollectionEligible: true,
+  },
+  {
+    name: "Anti-TPO Antibody",
+    category: "Endocrinology",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 900,
+    homeCollectionEligible: true,
+  },
+  {
+    name: "Testosterone (Total)",
+    category: "Endocrinology",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: "Morning sample (8-10 AM) preferred.",
+    price: 800,
+    homeCollectionEligible: true,
+  },
+  {
+    name: "Cortisol (AM)",
+    category: "Endocrinology",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: "Morning sample (8-10 AM) required.",
+    price: 850,
+    homeCollectionEligible: true,
+  },
+  {
+    name: "Insulin (Fasting)",
+    category: "Endocrinology",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: "8-10 hours fasting required.",
+    price: 900,
+    homeCollectionEligible: true,
+  },
+  // --- Hematology ---
+  {
+    name: "Erythrocyte Sedimentation Rate (ESR)",
+    category: "Hematology",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 200,
+    homeCollectionEligible: true,
+  },
+  {
+    name: "Peripheral Blood Smear",
+    category: "Hematology",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 300,
+    homeCollectionEligible: true,
+  },
+  {
+    name: "Reticulocyte Count",
+    category: "Hematology",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 350,
+    homeCollectionEligible: true,
+  },
+  // --- Vitamins & Minerals ---
+  {
+    name: "Vitamin B9 (Folate)",
+    category: "Vitamins",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 850,
+    homeCollectionEligible: true,
+  },
+  {
+    name: "Magnesium (Serum)",
+    category: "Vitamins",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 400,
+    homeCollectionEligible: true,
+  },
+  // --- Serology / Infectious Disease ---
+  {
+    name: "HIV I & II Antibody (ELISA)",
+    category: "Serology",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 500,
+    homeCollectionEligible: true,
+  },
+  {
+    name: "Hepatitis B Surface Antigen (HBsAg)",
+    category: "Serology",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 400,
+    homeCollectionEligible: true,
+  },
+  {
+    name: "Hepatitis C Antibody (Anti-HCV)",
+    category: "Serology",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 550,
+    homeCollectionEligible: true,
+  },
+  {
+    name: "Malaria Antigen (Rapid)",
+    category: "Serology",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 400,
+    homeCollectionEligible: true,
+  },
+  {
+    name: "Typhidot IgM/IgG",
+    category: "Serology",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 550,
+    homeCollectionEligible: true,
+  },
+  {
+    name: "C-Reactive Protein (CRP)",
+    category: "Serology",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 500,
+    homeCollectionEligible: true,
+  },
+  // --- Pathology ---
+  {
+    name: "Sputum for AFB (Smear)",
+    category: "Pathology",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: "Early morning sample preferred.",
+    price: 250,
+    homeCollectionEligible: false,
+  },
+  {
+    name: "Pap Smear",
+    category: "Pathology",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: "Avoid scheduling during menstruation.",
+    price: 600,
+    homeCollectionEligible: false,
+  },
+  // --- Tumour markers ---
+  {
+    name: "PSA (Prostate Specific Antigen)",
+    category: "Oncology Markers",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 900,
+    homeCollectionEligible: true,
+  },
+  {
+    name: "CA-125",
+    category: "Oncology Markers",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 1200,
+    homeCollectionEligible: true,
+  },
+  {
+    name: "CEA (Carcinoembryonic Antigen)",
+    category: "Oncology Markers",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 1100,
+    homeCollectionEligible: true,
+  },
+  // --- Allergy ---
+  {
+    name: "Allergy Panel — Food (24 parameters)",
+    category: "Allergy",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 3500,
+    homeCollectionEligible: true,
+  },
+  {
+    name: "Allergy Panel — Inhalant (24 parameters)",
+    category: "Allergy",
+    isPackage: false,
+    includedParameters: [],
+    preparationInstructions: null,
+    price: 3500,
+    homeCollectionEligible: true,
+  },
+  // --- More packages ---
+  {
+    name: "Vijaya Women's Wellness Package",
+    category: "Packages",
+    isPackage: true,
+    includedParameters: [
+      "CBC",
+      "Thyroid Profile",
+      "Vitamin D",
+      "Vitamin B12",
+      "Iron Studies",
+      "Pap Smear",
+    ],
+    preparationInstructions: "10-12 hours fasting required.",
+    price: 3499,
+    homeCollectionEligible: false,
+  },
+  {
+    name: "Vijaya Cardiac Risk Package",
+    category: "Packages",
+    isPackage: true,
+    includedParameters: ["Lipid Profile", "HbA1c", "CRP", "Electrolytes"],
+    preparationInstructions: "10-12 hours fasting required.",
+    price: 2499,
+    homeCollectionEligible: true,
+  },
+  {
+    name: "Vijaya Senior Citizen Package",
+    category: "Packages",
+    isPackage: true,
+    includedParameters: [
+      "CBC",
+      "Lipid Profile",
+      "LFT",
+      "KFT",
+      "Thyroid Profile",
+      "HbA1c",
+      "Vitamin D",
+      "Vitamin B12",
+      "PSA",
+      "ESR",
+    ],
+    preparationInstructions: "10-12 hours fasting required.",
+    price: 5999,
+    homeCollectionEligible: true,
+    payAtReceptionEligible: false,
+  },
+  {
+    name: "Vijaya Fever Profile Package",
+    category: "Packages",
+    isPackage: true,
+    includedParameters: ["CBC", "CRP", "Malaria Antigen", "Widal Test", "Dengue NS1 Antigen"],
+    preparationInstructions: null,
+    price: 1799,
+    homeCollectionEligible: true,
+  },
 ];
 
 const CENTRES: Array<{
@@ -453,16 +1188,20 @@ const LAB_PRICE_OVERRIDES: Record<string, Record<string, number>> = {
   "Vijaya Diagnostics — Kukatpally": { "Complete Blood Count (CBC)": 300 },
 };
 
-const RADIOLOGY_SLOT_TIMES: Array<[number, number, number, number]> = [
-  [9, 0, 9, 30],
-  [11, 0, 11, 30],
-  [15, 0, 15, 30],
-];
-const LAB_SLOT_TIMES: Array<[number, number, number, number]> = [
-  [7, 0, 7, 30],
-  [9, 0, 9, 30],
-  [11, 0, 11, 30],
-];
+// Hourly appointment slots — every day runs 10:00-22:00, except Sunday which runs a
+// shorter 12:00-20:00 day.
+function hourlySlotTimes(startHour: number, endHour: number): Array<[number, number, number, number]> {
+  const slots: Array<[number, number, number, number]> = [];
+  for (let h = startHour; h < endHour; h++) {
+    slots.push([h, 0, h + 1, 0]);
+  }
+  return slots;
+}
+
+const WEEKDAY_RADIOLOGY_SLOT_TIMES = hourlySlotTimes(10, 22);
+const SUNDAY_RADIOLOGY_SLOT_TIMES = hourlySlotTimes(12, 20);
+const WEEKDAY_LAB_SLOT_TIMES = hourlySlotTimes(10, 22);
+const SUNDAY_LAB_SLOT_TIMES = hourlySlotTimes(12, 20);
 const HOME_COLLECTION_WINDOWS: Array<[number, number, number, number]> = [
   [7, 0, 8, 0],
   [8, 0, 9, 0],
@@ -642,8 +1381,13 @@ async function main() {
     const config = centreConfigByName.get(centre.name)!;
     for (let day = 0; day < SLOT_DAYS; day++) {
       const date = dateOnly(day);
+      const isSunday = date.getUTCDay() === 0;
+      const radiologySlotTimes = isSunday
+        ? SUNDAY_RADIOLOGY_SLOT_TIMES
+        : WEEKDAY_RADIOLOGY_SLOT_TIMES;
+      const labSlotTimes = isSunday ? SUNDAY_LAB_SLOT_TIMES : WEEKDAY_LAB_SLOT_TIMES;
       if (config.offersRadiology) {
-        for (const [sh, sm, eh, em] of RADIOLOGY_SLOT_TIMES) {
+        for (const [sh, sm, eh, em] of radiologySlotTimes) {
           slotRows.push({
             centreId: centre.id,
             type: "RADIOLOGY",
@@ -655,7 +1399,7 @@ async function main() {
         }
       }
       if (config.offersLab) {
-        for (const [sh, sm, eh, em] of LAB_SLOT_TIMES) {
+        for (const [sh, sm, eh, em] of labSlotTimes) {
           slotRows.push({
             centreId: centre.id,
             type: "LAB",
