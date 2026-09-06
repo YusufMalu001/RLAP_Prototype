@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { StitchAuthButton } from "../components/StitchAuthButton";
 
 export default function HomePage() {
   return (
@@ -21,6 +22,10 @@ export default function HomePage() {
         >
           Download Reports
         </Link>
+      </div>
+      <div className="mt-8 border-t border-slate-200 pt-6">
+        <p className="mb-3 text-xs text-slate-400">Design system integration</p>
+        <StitchAuthButton />
       </div>
     </main>
   );
