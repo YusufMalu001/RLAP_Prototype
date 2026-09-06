@@ -28,19 +28,26 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, [centreId, status]);
 
+  const STATUS_STYLES: Record<BookingStatus, string> = {
+    PENDING_PAYMENT: "bg-rlap-tertiary-light/10 text-rlap-tertiary-light",
+    CONFIRMED: "bg-rlap-primary-container/10 text-rlap-primary-container",
+    COMPLETED: "bg-rlap-success/10 text-rlap-success",
+    CANCELLED: "bg-rlap-error/10 text-rlap-error",
+  };
+
   return (
     <div>
-      <h1 className="mb-4 text-lg font-semibold text-slate-900">Dashboard</h1>
+      <h1 className="mb-6 text-headline-md font-bold text-rlap-on-surface">Operations Dashboard</h1>
 
-      <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4">
-        <div className="text-xs font-medium uppercase tracking-wide text-slate-400">
+      <div className="mb-8 rounded-lg border border-rlap-outline-variant bg-rlap-surface-bright p-5 shadow-rlap-1">
+        <div className="text-label-md font-semibold uppercase tracking-wide text-rlap-on-surface-variant">
           Today&apos;s Bookings
         </div>
-        <div className="mt-1 text-3xl font-bold text-slate-900">{todayCount ?? "—"}</div>
+        <div className="mt-1 text-display-lg text-rlap-primary-container">{todayCount ?? "—"}</div>
       </div>
 
-      <div className="mb-3 flex items-center gap-3">
-        <h2 className="text-sm font-semibold text-slate-700">Upcoming Bookings</h2>
+      <div className="mb-4 flex items-center gap-3">
+        <h2 className="text-title-md font-semibold text-rlap-on-surface">Bookings Registry</h2>
         <Select value={centreId} onChange={(e) => setCentreId(e.target.value)} className="w-48">
           <option value="">All centres</option>
           {centres.map((c) => (
@@ -64,38 +71,49 @@ export default function DashboardPage() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-slate-400">Loading…</p>
+        <p className="text-body-md text-rlap-on-surface-variant">Loading…</p>
       ) : bookings.length === 0 ? (
-        <p className="text-sm text-slate-400">No upcoming bookings match these filters.</p>
+        <p className="text-body-md text-rlap-on-surface-variant">
+          No upcoming bookings match these filters.
+        </p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-200 text-xs uppercase text-slate-400">
+        <div className="overflow-x-auto rounded-lg border border-rlap-outline-variant bg-rlap-surface-bright shadow-rlap-1">
+          <table className="w-full text-left text-body-md">
+            <thead className="border-b border-rlap-outline-variant text-label-md uppercase text-rlap-on-surface-variant">
               <tr>
-                <th className="px-4 py-2">Booking</th>
-                <th className="px-4 py-2">Patient</th>
-                <th className="px-4 py-2">Centre</th>
-                <th className="px-4 py-2">Status</th>
-                <th className="px-4 py-2">Amount</th>
+                <th className="px-4 py-3">Booking</th>
+                <th className="px-4 py-3">Patient</th>
+                <th className="px-4 py-3">Centre</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Amount</th>
               </tr>
             </thead>
             <tbody>
               {bookings.map((b) => (
-                <tr key={b.id} className="border-b border-slate-100 last:border-0">
-                  <td className="px-4 py-2">
+                <tr
+                  key={b.id}
+                  className="border-b border-rlap-outline-variant last:border-0 hover:bg-rlap-surface-container-low"
+                >
+                  <td className="px-4 py-3">
                     <Link
                       href={`/bookings/${b.id}`}
-                      className="font-medium text-blue-600 hover:underline"
+                      className="font-semibold text-rlap-primary-container hover:underline"
                     >
                       {b.bookingCode}
                     </Link>
                   </td>
-                  <td className="px-4 py-2">
+                  <td className="px-4 py-3 text-rlap-on-surface">
                     {b.patientName ?? "—"} · {b.patientMobile}
                   </td>
-                  <td className="px-4 py-2">{b.centre.name}</td>
-                  <td className="px-4 py-2">{b.status}</td>
-                  <td className="px-4 py-2">₹{b.totalAmount}</td>
+                  <td className="px-4 py-3 text-rlap-on-surface">{b.centre.name}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-caption font-semibold ${STATUS_STYLES[b.status]}`}
+                    >
+                      {b.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 font-semibold text-rlap-on-surface">₹{b.totalAmount}</td>
                 </tr>
               ))}
             </tbody>
