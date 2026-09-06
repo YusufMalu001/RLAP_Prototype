@@ -230,3 +230,41 @@ export interface ReportBooking {
   totalAmount: number;
   createdAt: string;
 }
+
+export type SmokingStatus = "NEVER" | "FORMER" | "CURRENT";
+export type AlcoholConsumption = "NONE" | "OCCASIONAL" | "REGULAR";
+
+export interface PatientFull {
+  id: string;
+  mobileNumber: string;
+  name: string | null;
+  dobOrAge: string | null;
+  gender: Gender | null;
+  email: string | null;
+  heightCm: number | null;
+  weightKg: number | null;
+  allergies: string | null;
+  chronicConditions: string | null;
+  currentMedications: string | null;
+  familyMedicalHistory: string | null;
+  smokingStatus: SmokingStatus | null;
+  alcoholConsumption: AlcoholConsumption | null;
+  medicalNotes: string | null;
+}
+
+export interface MedicalHistoryInput {
+  heightCm?: number | null;
+  weightKg?: number | null;
+  allergies?: string | null;
+  chronicConditions?: string | null;
+  currentMedications?: string | null;
+  familyMedicalHistory?: string | null;
+  smokingStatus?: SmokingStatus | null;
+  alcoholConsumption?: AlcoholConsumption | null;
+  medicalNotes?: string | null;
+}
+
+export interface PatientProfile {
+  patient: PatientFull;
+  reports: ReportBooking[];
+}

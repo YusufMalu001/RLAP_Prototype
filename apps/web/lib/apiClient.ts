@@ -9,9 +9,12 @@ import type {
   HoldStatus,
   LabTestDetail,
   LabTestSummary,
+  MedicalHistoryInput,
   Modality,
   NudgeResult,
   OcrMergeResult,
+  PatientFull,
+  PatientProfile,
   PayResult,
   PaymentMethod,
   PinCheckResult,
@@ -176,6 +179,15 @@ export const api = {
     sessionToken: string,
     details: { name: string; dobOrAge: string; gender: Gender; email?: string },
   ) => request<{ patient: unknown }>(`/api/patient-session/${sessionToken}/details`, json(details)),
+
+  patientProfile: (sessionToken: string) =>
+    request<PatientProfile>(`/api/patient-session/${sessionToken}/profile`),
+
+  saveMedicalHistory: (sessionToken: string, input: MedicalHistoryInput) =>
+    request<{ patient: PatientFull }>(`/api/patient-session/${sessionToken}/medical-history`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    }),
 
   // ---------------------------------------------------------------------------
   // OCR

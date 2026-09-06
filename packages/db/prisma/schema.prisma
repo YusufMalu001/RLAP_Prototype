@@ -42,6 +42,18 @@ enum SlotType {
   HOME_COLLECTION_WINDOW
 }
 
+enum SmokingStatus {
+  NEVER
+  FORMER
+  CURRENT
+}
+
+enum AlcoholConsumption {
+  NONE
+  OCCASIONAL
+  REGULAR
+}
+
 enum Gender {
   MALE
   FEMALE
@@ -331,6 +343,18 @@ model Patient {
   dobOrAge     String?
   gender       Gender?
   email        String?
+
+  // Self-reported medical history — optional, filled in from the Profile page (never required
+  // to book) purely to improve future test/package recommendations and safety-check context.
+  heightCm             Int?
+  weightKg             Int?
+  allergies            String?
+  chronicConditions    String?
+  currentMedications   String?
+  familyMedicalHistory String?
+  smokingStatus        SmokingStatus?
+  alcoholConsumption   AlcoholConsumption?
+  medicalNotes         String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
