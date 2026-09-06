@@ -25,19 +25,19 @@ export function ScreenShell({
   const error = useWidgetStore((s) => s.error);
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-white sm:my-6 sm:min-h-[min(44rem,90vh)] sm:rounded-2xl sm:shadow-xl">
-      <header className="flex items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
-        <div className="flex min-w-0 items-center gap-2">
+    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-rlap-surface sm:my-6 sm:min-h-[min(44rem,90vh)] sm:rounded-xl sm:shadow-rlap-2">
+      <header className="flex items-center justify-between gap-2 border-b border-rlap-outline-variant bg-rlap-surface-bright px-4 py-3">
+        <div className="flex min-w-0 items-center gap-3">
           {showBack && history.length > 0 ? (
             <button
               onClick={goBack}
               aria-label="Back"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-rlap-on-surface-variant hover:bg-rlap-surface-container transition-colors"
             >
               ←
             </button>
           ) : null}
-          <h1 className="truncate text-base font-semibold text-slate-900">{title}</h1>
+          <h1 className="truncate text-title-md font-semibold text-rlap-on-surface">{title}</h1>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <CountdownChip />
@@ -45,7 +45,7 @@ export function ScreenShell({
             <button
               onClick={onClose}
               aria-label="Close"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-rlap-on-surface-variant hover:bg-rlap-surface-container transition-colors"
             >
               ✕
             </button>
@@ -54,12 +54,14 @@ export function ScreenShell({
       </header>
 
       {error ? (
-        <div className="mx-4 mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
+        <div className="mx-4 mt-3 rounded-lg border border-rlap-error bg-rlap-error/5 px-4 py-3 text-body-md text-rlap-error">
+          {error}
+        </div>
       ) : null}
 
-      <div className="flex-1 overflow-y-auto px-4 py-4">{children}</div>
+      <div className="flex-1 overflow-y-auto px-4 py-5">{children}</div>
 
-      {footer ? <footer className="border-t border-slate-100 px-4 py-3">{footer}</footer> : null}
+      {footer ? <footer className="border-t border-rlap-outline-variant bg-rlap-surface-bright px-4 py-4">{footer}</footer> : null}
     </div>
   );
 }

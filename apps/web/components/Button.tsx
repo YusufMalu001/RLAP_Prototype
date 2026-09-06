@@ -5,10 +5,10 @@ import type { ButtonHTMLAttributes } from "react";
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 
 const VARIANT_CLASSES: Record<Variant, string> = {
-  primary: "bg-blue-600 text-white hover:bg-blue-700 disabled:bg-slate-300",
-  secondary: "bg-white text-blue-600 border border-blue-600 hover:bg-blue-50 disabled:opacity-50",
-  ghost: "bg-transparent text-slate-600 hover:bg-slate-100",
-  danger: "bg-red-600 text-white hover:bg-red-700 disabled:bg-slate-300",
+  primary: "bg-rlap-secondary-light text-white hover:bg-rlap-secondary disabled:bg-rlap-surface-dim shadow-rlap-1 active:shadow-none",
+  secondary: "bg-white text-rlap-primary-container border-2 border-rlap-primary-container hover:bg-rlap-surface-container disabled:opacity-50",
+  ghost: "bg-transparent text-rlap-primary-container hover:bg-rlap-surface-container",
+  danger: "bg-rlap-error text-white hover:bg-rlap-error/90 disabled:bg-rlap-surface-dim",
 };
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -26,7 +26,7 @@ export function Button({
 }: ButtonProps) {
   return (
     <button
-      className={`w-full rounded-xl px-4 py-3 text-sm font-semibold transition-colors disabled:cursor-not-allowed ${VARIANT_CLASSES[variant]} ${className}`}
+      className={`w-full rounded-lg px-4 py-3 text-label-lg font-semibold transition-all disabled:cursor-not-allowed ${VARIANT_CLASSES[variant]} ${className}`}
       disabled={disabled || loading}
       {...rest}
     >

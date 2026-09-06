@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import type { ScreenId } from "../lib/store";
 import { useWidgetStore } from "../lib/store";
 import { BookingSummary } from "../screens/BookingSummary";
 import { CentreSelection } from "../screens/CentreSelection";
@@ -36,6 +37,10 @@ export function WidgetRouter({ orgSlug }: { orgSlug: string }) {
     void init(orgSlug);
   }, [orgSlug, init]);
 
+  return renderScreen(screen);
+}
+
+function renderScreen(screen: ScreenId) {
   switch (screen) {
     case "HOME":
       return <Home />;
