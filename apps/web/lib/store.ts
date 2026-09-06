@@ -271,8 +271,27 @@ export const useWidgetStore = create<WidgetState>()(
         set({ loading: true, error: null });
         try {
           const token = await get().ensureCart();
-          const cart = await api.addCartItem(token, itemType, itemId);
-          set({ cart, loading: false });
+          try {
+            const cart = await api.addCartItem(token, itemType, itemId);
+            set({ cart, loading: false });
+          } catch (err) {
+            // The cart store is in-memory on the API (§cart/store.ts) — an API restart mid-session
+            // (cart gone, 404) or a dev reseed (org row recreated with a new id, so the item's
+            // organizationId no longer matches the cart's, 400) both leave the browser holding a
+            // dead cart. Recover once by starting a fresh cart instead of failing the add silently.
+            const isStaleCart =
+              err instanceof ApiError &&
+              (err.status === 404 || (err.status === 400 && err.message.includes("organization")));
+            if (isStaleCart) {
+              const orgSlug = get().orgSlug;
+              if (!orgSlug) throw err;
+              const fresh = await api.createCart(orgSlug);
+              const cart = await api.addCartItem(fresh.token, itemType, itemId);
+              set({ cartToken: fresh.token, cart, loading: false });
+              return;
+            }
+            throw err;
+          }
         } catch (err) {
           set({
             loading: false,
@@ -312,10 +331,16 @@ export const useWidgetStore = create<WidgetState>()(
           if (location && matching.length > 0) {
             const { centres: nearby } = await api.centresNearby(orgSlug, location);
             const distanceById = new Map(nearby.map((c) => [c.id, c.distanceKm ?? null]));
+            // For a manual city/area pick there's no real distance (both null), so fall back
+            // to the API's own ordering — it already puts an exact area match first (§4.2 R5).
+            const rankById = new Map(nearby.map((c, i) => [c.id, i]));
             const withDistance = matching
               .map((c) => ({ ...c, distanceKm: distanceById.get(c.id) ?? null }))
               .sort((a, b) => {
-                if (a.distanceKm == null) return b.distanceKm == null ? 0 : 1;
+                if (a.distanceKm == null && b.distanceKm == null) {
+                  return (rankById.get(a.id) ?? 0) - (rankById.get(b.id) ?? 0);
+                }
+                if (a.distanceKm == null) return 1;
                 if (b.distanceKm == null) return -1;
                 return a.distanceKm - b.distanceKm;
               });
