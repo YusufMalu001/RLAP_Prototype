@@ -14,6 +14,7 @@ import { getBookingSummary } from "../cart/bookingSummaryService";
 import { setCentreOnCart } from "../cart/centreSelectionService";
 import { getCentresForCart } from "../cart/centresForCart";
 import { checkHomeCollectionPin, saveHomeCollectionAddress } from "../cart/homeCollectionService";
+import { getLabRecommendations } from "../cart/labRecommendationService";
 import { getPreparationInstructions } from "../cart/preparationInstructionsService";
 import { isSafetyCheckRequired, submitSafetyCheck } from "../cart/safetyCheckService";
 import { getHoldStatus, holdSlot } from "../cart/slotHoldService";
@@ -190,6 +191,13 @@ cartRouter.post(
     }
     const flagged = submitSafetyCheck(req.params.token!, answers);
     res.json({ flagged });
+  }),
+);
+
+cartRouter.get(
+  "/:token/recommendations",
+  asyncHandler(async (req, res) => {
+    res.json({ suggestions: await getLabRecommendations(req.params.token!) });
   }),
 );
 

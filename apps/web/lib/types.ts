@@ -268,3 +268,12 @@ export interface PatientProfile {
   patient: PatientFull;
   reports: ReportBooking[];
 }
+
+export interface LabRecommendation {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  homeCollectionEligible: boolean;
+  rationale: string;
+}

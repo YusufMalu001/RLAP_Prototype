@@ -2,6 +2,7 @@
 
 import { CartItemRow } from "../components/CartItemRow";
 import { NudgeCard } from "../components/NudgeCard";
+import { RecommendedLabTests } from "../components/RecommendedLabTests";
 import { Breadcrumb } from "../components/AppHeader";
 import { useWidgetStore } from "../lib/store";
 
@@ -61,6 +62,8 @@ export function RadiologyCart() {
           </button>
 
           <NudgeCard />
+
+          {hasItems ? <RecommendedLabTests /> : null}
         </div>
 
         <div className="flex flex-col gap-space-lg lg:sticky lg:top-20 lg:col-span-4">

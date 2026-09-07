@@ -7,6 +7,7 @@ import type {
   ConfirmBookingResult,
   Gender,
   HoldStatus,
+  LabRecommendation,
   LabTestDetail,
   LabTestSummary,
   MedicalHistoryInput,
@@ -128,6 +129,9 @@ export const api = {
 
   centresForCart: (token: string) =>
     request<{ centres: CentreSummary[] }>(`/api/cart/${token}/centres`),
+
+  labRecommendations: (token: string) =>
+    request<{ suggestions: LabRecommendation[] }>(`/api/cart/${token}/recommendations`),
 
   setCentre: (token: string, centreId: string) =>
     request<Cart>(`/api/cart/${token}/centre`, json({ centreId })),
