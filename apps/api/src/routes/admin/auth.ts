@@ -5,11 +5,15 @@ import { ADMIN_SESSION_COOKIE, login, logout } from "../../admin/sessionService"
 
 export const adminAuthRouter = Router();
 
+const isProduction = process.env.NODE_ENV === "production";
 const SESSION_COOKIE_OPTIONS = {
   httpOnly: true,
   signed: true,
-  sameSite: "lax" as const,
-  secure: process.env.NODE_ENV === "production",
+  // The admin app and API are deployed to different domains (Vercel + Render/Railway/Fly), so
+  // this cookie must survive a cross-site fetch — "lax" is dropped on those, "none" is not.
+  // "none" requires secure:true, which only makes sense once we're actually on HTTPS.
+  sameSite: (isProduction ? "none" : "lax") as "none" | "lax",
+  secure: isProduction,
   path: "/",
 };
 
