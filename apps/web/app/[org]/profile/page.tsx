@@ -98,7 +98,7 @@ export default function ProfilePage({ params }: { params: { org: string } }) {
 
   return (
     <AppShell>
-      <Breadcrumb section="My Account" step="Patient Profile" showBack={false} />
+      <Breadcrumb section="My Account" step="Patient Profile" backHref={`/${orgSlug}/book`} />
 
       {error ? (
         <div className="mb-space-md rounded-lg border border-error bg-error-container px-space-md py-space-sm font-body-md text-body-md text-on-error-container">

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import type { ScreenId } from "../lib/store";
 import { useWidgetStore } from "../lib/store";
 import { Toast } from "./Toast";
@@ -60,6 +61,13 @@ export function AppHeader() {
   const reset = useWidgetStore((s) => s.reset);
   const navigate = useWidgetStore((s) => s.navigate);
   const orgSlug = useWidgetStore((s) => s.orgSlug);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const bookHref = orgSlug ? `/${orgSlug}/book` : null;
+  // The booking flow's screen state lives in the store, not the URL — pages outside it (like
+  // Profile) render this same header, so nav/close must actually change route to get back in.
+  const onBookPage = pathname === bookHref;
 
   // The path the patient has actually walked, oldest first, ending at the current screen —
   // used both to cap how far ahead the nav can jump and to resume exactly where they left off.
@@ -72,6 +80,11 @@ export function AppHeader() {
       if (tabIndexFor(path[i]!) === tabIndex) return path[i]!;
     }
     return NAV_TABS[tabIndex]!.screens[0]!;
+  }
+
+  function goToTab(tabIndex: number) {
+    navigate(lastVisitedScreenForTab(tabIndex));
+    if (!onBookPage && bookHref) router.push(bookHref);
   }
 
   return (
@@ -110,7 +123,7 @@ export function AppHeader() {
               <button
                 key={tab.label}
                 disabled={!reachable}
-                onClick={() => reachable && navigate(lastVisitedScreenForTab(i))}
+                onClick={() => reachable && goToTab(i)}
                 className={`relative z-10 whitespace-nowrap rounded-full px-space-md py-space-xs font-label-md text-label-md transition-colors duration-300 ${
                   active
                     ? "text-on-primary"
@@ -127,12 +140,20 @@ export function AppHeader() {
 
         <div className="flex items-center gap-space-xs">
           <button
-            aria-label="Close widget"
-            onClick={() => reset()}
+            aria-label={onBookPage ? "Close widget" : "Back to booking"}
+            onClick={() => {
+              if (onBookPage) {
+                reset();
+              } else if (bookHref) {
+                router.push(bookHref);
+              }
+            }}
             className="flex h-10 w-10 items-center justify-center rounded-full text-primary transition-colors hover:bg-surface-container-high"
             type="button"
           >
-            <span className="material-symbols-outlined text-[20px]">close</span>
+            <span className="material-symbols-outlined text-[20px]">
+              {onBookPage ? "close" : "arrow_back"}
+            </span>
           </button>
           <Link
             href={orgSlug ? `/${orgSlug}/profile` : "#"}
@@ -152,26 +173,45 @@ interface BreadcrumbProps {
   step: string;
   sessionLabel?: string;
   showBack?: boolean;
+  /** For pages outside the booking widget's screen state machine (e.g. Profile, Reports) —
+   * renders the back arrow as a real link to this URL instead of the store's goBack(). */
+  backHref?: string;
 }
 
 /** Breadcrumb sub-bar every full-page screen renders at the top of its content — carries the
  * only in-app way to step back (the SPA has one URL, so the browser's own back button can't). */
-export function Breadcrumb({ section, step, sessionLabel, showBack = true }: BreadcrumbProps) {
+export function Breadcrumb({
+  section,
+  step,
+  sessionLabel,
+  showBack = true,
+  backHref,
+}: BreadcrumbProps) {
   const goBack = useWidgetStore((s) => s.goBack);
   const history = useWidgetStore((s) => s.history);
-  const canGoBack = showBack && history.length > 0;
+  const canGoBack = showBack && (backHref !== undefined || history.length > 0);
 
   return (
     <div className="mb-space-md flex w-full flex-wrap items-center justify-between gap-space-sm pb-space-lg">
       <div className="flex items-center gap-space-xs font-label-md text-label-md text-on-surface-variant">
         {canGoBack ? (
-          <button
-            onClick={goBack}
-            aria-label="Go back"
-            className="mr-space-2xs flex h-8 w-8 items-center justify-center rounded-full text-primary transition-colors hover:bg-surface-container-high"
-          >
-            <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-          </button>
+          backHref ? (
+            <Link
+              href={backHref}
+              aria-label="Go back"
+              className="mr-space-2xs flex h-8 w-8 items-center justify-center rounded-full text-primary transition-colors hover:bg-surface-container-high"
+            >
+              <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+            </Link>
+          ) : (
+            <button
+              onClick={goBack}
+              aria-label="Go back"
+              className="mr-space-2xs flex h-8 w-8 items-center justify-center rounded-full text-primary transition-colors hover:bg-surface-container-high"
+            >
+              <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+            </button>
+          )
         ) : null}
         <span>{section}</span>
         <span className="material-symbols-outlined text-[16px] text-outline">chevron_right</span>
