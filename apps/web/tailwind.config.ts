@@ -3,7 +3,12 @@ import type { Config } from "tailwindcss";
 // Token names/values copied verbatim from the Stitch-generated design system
 // (projects/661045816018978058) so screen markup can port over 1:1 without translation.
 const config: Config = {
-  content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./screens/**/*.{ts,tsx}"],
+  content: [
+    "./app/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./screens/**/*.{ts,tsx}",
+    "./lib/**/*.{ts,tsx}",
+  ],
   theme: {
     extend: {
       colors: {
@@ -55,6 +60,30 @@ const config: Config = {
         "on-secondary-fixed": "#3c0800",
         tertiary: "#371a00",
         success: "#2d7a68",
+
+        // rlap-* namespace: copied from the former apps/admin's own Tailwind config so the
+        // merged /admin section's existing markup (which uses these prefixed names) keeps
+        // rendering identically without a rewrite. Same underlying palette as above, just a
+        // different naming convention that predates the unprefixed Stitch tokens.
+        "rlap-primary": "#002530",
+        "rlap-primary-container": "#163b48",
+        "rlap-secondary": "#9a442d",
+        "rlap-secondary-light": "#e07a5f",
+        "rlap-secondary-container": "#fc9174",
+        "rlap-tertiary": "#371a00",
+        "rlap-tertiary-light": "#d97706",
+        "rlap-error": "#ba1a1a",
+        "rlap-success": "#2d7a68",
+        "rlap-surface": "#fbf9f6",
+        "rlap-surface-dim": "#dbdad7",
+        "rlap-surface-bright": "#fbf9f6",
+        "rlap-surface-container": "#efeeeb",
+        "rlap-surface-container-high": "#eae8e5",
+        "rlap-surface-container-highest": "#e4e2df",
+        "rlap-on-surface": "#1b1c1a",
+        "rlap-on-surface-variant": "#41484b",
+        "rlap-outline": "#72787b",
+        "rlap-outline-variant": "#c1c7cb",
       },
       fontFamily: {
         sans: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
