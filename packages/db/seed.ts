@@ -23,8 +23,11 @@ async function hashPassword(password: string): Promise<string> {
   return `${salt}:${derived.toString("hex")}`;
 }
 
-const DEV_ADMIN_EMAIL = "admin@vijayadiagnostics.test";
-const DEV_ADMIN_PASSWORD = "admin123!";
+// Matches apps/web/lib/session.ts's hardcoded ADMIN account — the unified /login page checks
+// these credentials against this same seeded AdminUser row (via the API's real admin login),
+// so the two must stay in sync.
+const DEV_ADMIN_EMAIL = "admin@gmail.com";
+const DEV_ADMIN_PASSWORD = "admin@123";
 
 // ---------------------------------------------------------------------------
 // Reference data

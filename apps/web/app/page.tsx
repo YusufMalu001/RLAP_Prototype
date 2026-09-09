@@ -72,20 +72,20 @@ export default function HomePage() {
           style={{ animationDelay: "240ms" }}
         >
           <Link
-            href="/vijaya-diagnostics/book"
+            href="/login"
             className="group flex h-14 min-w-[240px] items-center justify-center gap-space-xs rounded-xl bg-secondary px-space-xl font-label-lg text-label-lg text-on-secondary shadow-[0_10px_28px_rgba(154,68,45,0.28)] transition-all hover:-translate-y-0.5 hover:bg-secondary/90 active:translate-y-0"
           >
-            <span>Open Booking Widget</span>
+            <span>Sign In to Book</span>
             <span className="material-symbols-outlined text-[20px] transition-transform group-hover:translate-x-1">
               arrow_forward
             </span>
           </Link>
           <Link
-            href="/vijaya-diagnostics/reports"
+            href="/login"
             className="flex h-14 min-w-[200px] items-center justify-center gap-space-xs rounded-xl border-2 border-outline-variant bg-surface-container-lowest px-space-xl font-label-lg text-label-lg text-primary transition-all hover:-translate-y-0.5 hover:border-primary-container active:translate-y-0"
           >
-            <span className="material-symbols-outlined text-[20px]">description</span>
-            <span>Download Reports</span>
+            <span className="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+            <span>Admin Sign In</span>
           </Link>
         </div>
 
