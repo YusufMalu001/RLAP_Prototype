@@ -9,6 +9,7 @@ import {
   type RadiologyExam,
   type LabTest,
   type Centre,
+  type Patient,
 } from "./generated/client/index.js";
 
 const prisma = new PrismaClient();
@@ -1428,15 +1429,14 @@ async function main() {
   await prisma.slot.createMany({ data: slotRows });
 
   // -------------------------------------------------------------------------
-  // Sample bookings — so the admin dashboard/bookings pages have something to
-  // show out of the box, instead of demoing empty. Covers every status and
-  // booking type, across the two radiology+lab centres.
+  // Bulk sample bookings — every booking type, status, payment method, and
+  // collection-mode combination the catalogue actually supports, generated per
+  // centre from that centre's real (exclusion-aware) offerings rather than a
+  // hand-picked handful, so the admin dashboard/bookings pages demo richly
+  // instead of empty.
   // -------------------------------------------------------------------------
 
-  console.log("Creating sample patients and bookings...");
-
-  const ameerpet = centres.find((c) => c.area === "Ameerpet")!;
-  const banjaraHills = centres.find((c) => c.area === "Banjara Hills")!;
+  console.log("Creating sample patients and bulk bookings...");
 
   const SAMPLE_PATIENTS: Array<{
     mobileNumber: string;
@@ -1445,151 +1445,151 @@ async function main() {
     gender: "MALE" | "FEMALE" | "OTHER";
     email?: string;
   }> = [
-    { mobileNumber: "9876500001", name: "Ananya Sharma", dobOrAge: "34", gender: "FEMALE" },
+    { mobileNumber: "9876500001", name: "Ananya Sharma", dobOrAge: "34", gender: "FEMALE", email: "ananya.sharma@example.com" },
     { mobileNumber: "9876500002", name: "Rohit Verma", dobOrAge: "1990-05-12", gender: "MALE" },
-    { mobileNumber: "9876500003", name: "Priya Reddy", dobOrAge: "27", gender: "FEMALE" },
+    { mobileNumber: "9876500003", name: "Priya Reddy", dobOrAge: "27", gender: "FEMALE", email: "priya.reddy@example.com" },
     { mobileNumber: "9876500004", name: "Karthik Rao", dobOrAge: "45", gender: "MALE" },
-    { mobileNumber: "9876500005", name: "Sneha Iyer", dobOrAge: "31", gender: "FEMALE" },
+    { mobileNumber: "9876500005", name: "Sneha Iyer", dobOrAge: "31", gender: "FEMALE", email: "sneha.iyer@example.com" },
     { mobileNumber: "9876500006", name: "Arjun Nair", dobOrAge: "52", gender: "MALE" },
+    { mobileNumber: "9876500007", name: "Divya Menon", dobOrAge: "29", gender: "FEMALE" },
+    { mobileNumber: "9876500008", name: "Vikram Singh", dobOrAge: "60", gender: "MALE", email: "vikram.singh@example.com" },
+    { mobileNumber: "9876500009", name: "Meera Pillai", dobOrAge: "38", gender: "FEMALE" },
+    { mobileNumber: "9876500010", name: "Suresh Kumar", dobOrAge: "41", gender: "MALE" },
+    { mobileNumber: "9876500011", name: "Lakshmi Narayan", dobOrAge: "23", gender: "FEMALE" },
+    { mobileNumber: "9876500012", name: "Aditya Joshi", dobOrAge: "55", gender: "MALE", email: "aditya.joshi@example.com" },
+    { mobileNumber: "9876500013", name: "Kavya Krishnan", dobOrAge: "1985-11-02", gender: "FEMALE" },
+    { mobileNumber: "9876500014", name: "Manoj Gupta", dobOrAge: "48", gender: "MALE" },
+    { mobileNumber: "9876500015", name: "Ritu Agarwal", dobOrAge: "36", gender: "FEMALE" },
+    { mobileNumber: "9876500016", name: "Farhan Ahmed", dobOrAge: "33", gender: "MALE" },
+    { mobileNumber: "9876500017", name: "Alex Fernandes", dobOrAge: "40", gender: "OTHER" },
+    { mobileNumber: "9876500018", name: "Nisha Bhatt", dobOrAge: "26", gender: "FEMALE" },
   ];
 
-  const patients = [];
+  const patients: Patient[] = [];
   for (const p of SAMPLE_PATIENTS) {
-    patients.push(
-      await prisma.patient.create({
-        data: { organizationId: org.id, ...p },
-      }),
-    );
+    patients.push(await prisma.patient.create({ data: { organizationId: org.id, ...p } }));
   }
 
-  async function slotFor(centreId: string, type: SlotType, daysFromToday: number) {
-    const date = dateOnly(daysFromToday);
+  function eligibleRadiologyForCentre(centreName: string): RadiologyExam[] {
+    const config = centreConfigByName.get(centreName)!;
+    if (!config.offersRadiology) return [];
+    const excluded = new Set(config.radiologyExclude);
+    return radiologyExams.filter((e) => !excluded.has(e.name));
+  }
+
+  function eligibleLabForCentre(centreName: string): LabTest[] {
+    const config = centreConfigByName.get(centreName)!;
+    if (!config.offersLab) return [];
+    const excluded = new Set(config.labExclude);
+    return labTests.filter((t) => !excluded.has(t.name));
+  }
+
+  async function slotFor(centreId: string, type: SlotType, dayIndex: number) {
+    const date = dateOnly(dayIndex % SLOT_DAYS);
     return prisma.slot.findFirstOrThrow({ where: { centreId, type, date } });
   }
 
-  function bookingCode(n: number): string {
-    return `RLAP-DEMO${String(n).padStart(3, "0")}`;
+  const STATUSES = ["PENDING_PAYMENT", "CONFIRMED", "COMPLETED", "CANCELLED"] as const;
+  const PAYMENT_METHODS = ["ONLINE", "PAY_AT_RECEPTION"] as const;
+  const NOTIFICATION_CHANNELS = ["SMS", "EMAIL", "WHATSAPP"] as const;
+
+  let bookingCounter = 0;
+  let patientCursor = 0;
+  function nextPatient() {
+    const patient = patients[patientCursor % patients.length]!;
+    patientCursor += 1;
+    return patient;
   }
 
-  const usgAbdomen = radiologyByName.get("USG Abdomen")!;
-  const xrayChest = radiologyByName.get("X-Ray Chest PA View")!;
-  const mriBrainForBooking = radiologyByName.get("MRI Brain Plain")!;
-  const ctChest = radiologyByName.get("CT Chest Plain")!;
-  const cbc = labByName.get("Complete Blood Count (CBC)")!;
-  const lipidProfileForBooking = labByName.get("Lipid Profile")!;
-  const hba1c = labByName.get("HbA1c")!;
-  const thyroidProfile = labByName.get("Thyroid Profile (T3, T4, TSH)")!;
-
-  interface SampleBooking {
-    n: number;
-    patient: (typeof patients)[number];
+  interface GeneratedBooking {
     centreId: string;
-    status: "PENDING_PAYMENT" | "CONFIRMED" | "COMPLETED" | "CANCELLED";
     type: "RADIOLOGY" | "LAB" | "COMBINED";
-    paymentMethod: "ONLINE" | "PAY_AT_RECEPTION";
+    status: (typeof STATUSES)[number];
+    paymentMethod: (typeof PAYMENT_METHODS)[number];
     collectionMode: "CENTRE_VISIT" | "HOME_COLLECTION" | null;
-    daysFromToday: number;
     lineItems: Array<{ item: RadiologyExam | LabTest; kind: "RADIOLOGY_EXAM" | "LAB_TEST" }>;
     slotTypes: SlotType[];
-    safetyFlagged?: boolean;
   }
 
-  const SAMPLE_BOOKINGS: SampleBooking[] = [
-    {
-      n: 1,
-      patient: patients[0]!,
-      centreId: ameerpet.id,
-      status: "COMPLETED",
-      type: "RADIOLOGY",
-      paymentMethod: "ONLINE",
-      collectionMode: "CENTRE_VISIT",
-      daysFromToday: -3,
-      lineItems: [{ item: usgAbdomen, kind: "RADIOLOGY_EXAM" }],
-      slotTypes: ["RADIOLOGY"],
-    },
-    {
-      n: 2,
-      patient: patients[1]!,
-      centreId: banjaraHills.id,
-      status: "CONFIRMED",
-      type: "RADIOLOGY",
-      paymentMethod: "ONLINE",
-      collectionMode: "CENTRE_VISIT",
-      daysFromToday: 0,
-      lineItems: [{ item: mriBrainForBooking, kind: "RADIOLOGY_EXAM" }],
-      slotTypes: ["RADIOLOGY"],
-      safetyFlagged: false,
-    },
-    {
-      n: 3,
-      patient: patients[2]!,
-      centreId: ameerpet.id,
-      status: "CONFIRMED",
-      type: "LAB",
-      paymentMethod: "PAY_AT_RECEPTION",
-      collectionMode: "HOME_COLLECTION",
-      daysFromToday: 1,
-      lineItems: [
-        { item: cbc, kind: "LAB_TEST" },
-        { item: lipidProfileForBooking, kind: "LAB_TEST" },
-      ],
-      slotTypes: ["HOME_COLLECTION_WINDOW"],
-    },
-    {
-      n: 4,
-      patient: patients[3]!,
-      centreId: ameerpet.id,
-      status: "PENDING_PAYMENT",
-      type: "COMBINED",
-      paymentMethod: "ONLINE",
-      collectionMode: "CENTRE_VISIT",
-      daysFromToday: 2,
-      lineItems: [
-        { item: xrayChest, kind: "RADIOLOGY_EXAM" },
-        { item: hba1c, kind: "LAB_TEST" },
-      ],
-      slotTypes: ["RADIOLOGY", "LAB"],
-    },
-    {
-      n: 5,
-      patient: patients[4]!,
-      centreId: banjaraHills.id,
-      status: "COMPLETED",
-      type: "LAB",
-      paymentMethod: "ONLINE",
-      collectionMode: "CENTRE_VISIT",
-      daysFromToday: -1,
-      lineItems: [{ item: thyroidProfile, kind: "LAB_TEST" }],
-      slotTypes: ["LAB"],
-    },
-    {
-      n: 6,
-      patient: patients[5]!,
-      centreId: ameerpet.id,
-      status: "CANCELLED",
-      type: "RADIOLOGY",
-      paymentMethod: "ONLINE",
-      collectionMode: "CENTRE_VISIT",
-      daysFromToday: 3,
-      lineItems: [{ item: ctChest, kind: "RADIOLOGY_EXAM" }],
-      slotTypes: ["RADIOLOGY"],
-    },
-  ];
+  const generated: GeneratedBooking[] = [];
 
-  for (const b of SAMPLE_BOOKINGS) {
+  for (const centre of centres) {
+    const config = centreConfigByName.get(centre.name)!;
+    const radiologyPool = eligibleRadiologyForCentre(centre.name);
+    const labPool = eligibleLabForCentre(centre.name);
+
+    const types: GeneratedBooking["type"][] = [];
+    if (config.offersRadiology) types.push("RADIOLOGY");
+    if (config.offersLab) types.push("LAB");
+    if (config.offersRadiology && config.offersLab) types.push("COMBINED");
+
+    for (const type of types) {
+      for (const status of STATUSES) {
+        for (const paymentMethod of PAYMENT_METHODS) {
+          const collectionModes: Array<"CENTRE_VISIT" | "HOME_COLLECTION" | null> =
+            type === "LAB" ? ["CENTRE_VISIT", "HOME_COLLECTION"] : [type === "RADIOLOGY" ? null : "CENTRE_VISIT"];
+
+          for (const collectionMode of collectionModes) {
+            const idx = generated.length;
+            const lineItems: GeneratedBooking["lineItems"] = [];
+            const slotTypes: SlotType[] = [];
+
+            if (type === "RADIOLOGY" || type === "COMBINED") {
+              const exam = radiologyPool[idx % radiologyPool.length]!;
+              lineItems.push({ item: exam, kind: "RADIOLOGY_EXAM" });
+              slotTypes.push("RADIOLOGY");
+            }
+            if (type === "LAB" || type === "COMBINED") {
+              const test = labPool[idx % labPool.length]!;
+              const test2 = labPool[(idx + 5) % labPool.length]!;
+              lineItems.push({ item: test, kind: "LAB_TEST" });
+              if (idx % 3 === 0 && test2.id !== test.id) {
+                lineItems.push({ item: test2, kind: "LAB_TEST" });
+              }
+              slotTypes.push(collectionMode === "HOME_COLLECTION" ? "HOME_COLLECTION_WINDOW" : "LAB");
+            }
+
+            generated.push({
+              centreId: centre.id,
+              type,
+              status,
+              paymentMethod,
+              collectionMode,
+              lineItems,
+              slotTypes,
+            });
+          }
+        }
+      }
+    }
+  }
+
+  console.log(`  ${generated.length} bookings to create...`);
+
+  for (const b of generated) {
+    bookingCounter += 1;
+    const patient = nextPatient();
     const totalAmount = b.lineItems.reduce((sum, li) => sum + Number(li.item.price), 0);
+
+    // Backdate completed/cancelled bookings so they read as history; leave pending/confirmed
+    // recent, since those represent an appointment still ahead of the patient.
+    const createdDaysAgo =
+      b.status === "COMPLETED" || b.status === "CANCELLED"
+        ? (bookingCounter % 20) + 1
+        : bookingCounter % 3;
+
     const booking = await prisma.booking.create({
       data: {
-        bookingCode: bookingCode(b.n),
+        bookingCode: `RLAP-DEMO${String(bookingCounter).padStart(4, "0")}`,
         organizationId: org.id,
-        patientId: b.patient.id,
+        patientId: patient.id,
         centreId: b.centreId,
         type: b.type,
         status: b.status,
         paymentMethod: b.paymentMethod,
         collectionMode: b.collectionMode,
         totalAmount,
-        createdAt: new Date(Date.now() + b.daysFromToday * 86400000 - 3600000),
+        createdAt: new Date(Date.now() - createdDaysAgo * 86400000),
       },
     });
 
@@ -1601,19 +1601,26 @@ async function main() {
           radiologyExamId: li.kind === "RADIOLOGY_EXAM" ? li.item.id : null,
           labTestId: li.kind === "LAB_TEST" ? li.item.id : null,
           priceAtBooking: Number(li.item.price),
-          source: "MANUAL",
+          source: bookingCounter % 7 === 0 ? "OCR" : "MANUAL",
+          ocrConfidence: bookingCounter % 7 === 0 ? (bookingCounter % 14 === 0 ? "LOW" : "HIGH") : null,
         },
       });
     }
 
     for (const slotType of b.slotTypes) {
-      const slot = await slotFor(b.centreId, slotType, Math.max(b.daysFromToday, 0));
+      const slot = await slotFor(b.centreId, slotType, bookingCounter);
       await prisma.bookingSlot.create({
         data: { bookingId: booking.id, slotId: slot.id, slotType },
       });
     }
 
-    if (b.safetyFlagged !== undefined) {
+    // Every radiology exam requiring a safety check gets full responses; flag ALLERGIES on
+    // roughly 1 in 6 so the flagged-callback path has visible examples too.
+    const safetyExam = b.lineItems.find(
+      (li) => li.kind === "RADIOLOGY_EXAM" && (li.item as RadiologyExam).requiresSafetyCheck,
+    );
+    if (safetyExam) {
+      const flagged = bookingCounter % 6 === 0;
       await prisma.safetyCheckResponse.createMany({
         data: [
           { bookingId: booking.id, questionKey: "PREGNANCY", answer: "NO", flagged: false },
@@ -1622,21 +1629,27 @@ async function main() {
           {
             bookingId: booking.id,
             questionKey: "ALLERGIES",
-            answer: b.safetyFlagged ? "YES" : "NO",
-            flagged: b.safetyFlagged,
+            answer: flagged ? "YES" : "NO",
+            flagged,
           },
         ],
       });
     }
 
     if (b.status === "CONFIRMED" || b.status === "COMPLETED") {
+      const channel = NOTIFICATION_CHANNELS[bookingCounter % NOTIFICATION_CHANNELS.length]!;
+      const to =
+        channel === "EMAIL" ? (patient.email ?? `${patient.mobileNumber}@example.com`) : `+91${patient.mobileNumber}`;
       await prisma.sentNotification.create({
         data: {
           bookingId: booking.id,
-          channel: "SMS",
-          to: `+91${b.patient.mobileNumber}`,
-          subject: null,
-          body: `Your RLAP booking ${booking.bookingCode} is confirmed. Reply HELP for support.`,
+          channel,
+          to,
+          subject: channel === "EMAIL" ? `Your RLAP booking ${booking.bookingCode}` : null,
+          body:
+            b.status === "COMPLETED"
+              ? `Your RLAP booking ${booking.bookingCode} is complete — reports are ready to download.`
+              : `Your RLAP booking ${booking.bookingCode} is confirmed. Reply HELP for support.`,
         },
       });
     }
