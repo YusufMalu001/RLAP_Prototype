@@ -575,7 +575,11 @@ export const useWidgetStore = create<WidgetState>()(
 
       savePatientDetails: async (details) => {
         const sessionToken = get().patientSessionToken;
-        if (!sessionToken) return;
+        if (!sessionToken) {
+          set({ error: "Your verification expired — please verify your mobile number again." });
+          get().navigate("OTP_VERIFICATION");
+          return;
+        }
         set({ loading: true, error: null });
         try {
           await api.savePatientDetails(sessionToken, details);
@@ -585,7 +589,10 @@ export const useWidgetStore = create<WidgetState>()(
         } catch (err) {
           set({
             loading: false,
-            error: err instanceof ApiError ? err.message : "Could not save details",
+            error:
+              err instanceof ApiError
+                ? err.message
+                : "Could not reach the server — check your connection and try again.",
           });
         }
       },

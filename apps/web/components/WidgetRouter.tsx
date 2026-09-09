@@ -37,7 +37,14 @@ export function WidgetRouter({ orgSlug }: { orgSlug: string }) {
     void init(orgSlug);
   }, [orgSlug, init]);
 
-  return renderScreen(screen);
+  // The key change forces a remount on every screen change, which replays the slide-in
+  // animation — a lightweight stand-in for a real page-transition library, since the store
+  // swaps screens synchronously rather than through routing.
+  return (
+    <div key={screen} className="animate-slide-in-x w-full">
+      {renderScreen(screen)}
+    </div>
+  );
 }
 
 function renderScreen(screen: ScreenId) {

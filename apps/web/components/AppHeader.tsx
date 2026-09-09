@@ -88,7 +88,7 @@ export function AppHeader() {
   }
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 bg-surface/90 shadow-[0_1px_8px_rgba(22,59,72,0.04)] backdrop-blur-xl">
+    <header className="shrink-0 bg-surface/90 shadow-[0_1px_8px_rgba(22,59,72,0.04)] backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-[1180px] items-center justify-between gap-space-md px-margin-mobile lg:px-margin-desktop">
         <div className="flex items-center gap-space-md">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-container text-on-primary">
@@ -229,40 +229,50 @@ export function Breadcrumb({
   );
 }
 
-/** Footer bar shared by every full-page screen, mirroring the Stitch footer. */
+/** Footer bar shared by every screen — compact since it now sits inside the modal window rather
+ * than at the bottom of a full page. */
 export function AppFooter() {
   return (
-    <footer className="mt-auto w-full bg-surface-container-low">
-      <div className="mx-auto flex max-w-[1180px] flex-col items-center justify-between gap-space-sm px-margin-mobile py-space-lg text-center sm:flex-row sm:text-left lg:px-margin-desktop">
+    <footer className="shrink-0 border-t border-outline-variant bg-surface-container-low">
+      <div className="mx-auto flex max-w-[1180px] flex-col items-center justify-between gap-space-2xs px-margin-mobile py-space-sm text-center sm:flex-row sm:text-left lg:px-margin-desktop">
         <div className="flex items-center gap-space-xs">
-          <span className="material-symbols-outlined text-[18px] text-secondary">verified_user</span>
+          <span className="material-symbols-outlined text-[16px] text-secondary">verified_user</span>
           <span className="font-caption text-caption text-on-surface-variant">
-            ISO 15189 Certified Diagnostic Center • High-precision Clinical Radiography
+            ISO 15189 Certified Diagnostic Center
           </span>
         </div>
-        <div className="flex items-center gap-space-lg">
-          <span className="font-caption text-caption text-on-surface-variant">
-            Confidential Concierge Line: +1 (800) 492-RLAP
-          </span>
-          <span className="font-caption text-caption text-outline">© 2024 RLAP Diagnostics Ltd.</span>
-        </div>
+        <span className="font-caption text-caption text-outline">© 2024 RLAP Diagnostics Ltd.</span>
       </div>
     </footer>
   );
 }
 
-/** Shared page frame: fixed header + max-width content well + footer, used by every full-page screen. */
+/** The booking widget renders as a centered modal window (~75% of the viewport) floating over a
+ * decorative, dimmed backdrop — not a full page. Every screen's own markup/logic is unchanged;
+ * only this outer frame changed, from a full page to a windowed dialog with internal scrolling
+ * and a slide transition between screens (see WidgetRouter). */
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background font-body-md text-on-surface">
+    <div className="fixed inset-0 z-40 flex items-center justify-center overflow-hidden bg-on-background/50 p-space-md backdrop-blur-sm sm:p-space-xl">
+      {/* Ambient backdrop, visible in the margin around the window */}
+      <div
+        aria-hidden
+        className="animate-float-slow pointer-events-none absolute -top-32 -right-24 h-[26rem] w-[26rem] rounded-full bg-primary-fixed/20 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="animate-float-slow-reverse pointer-events-none absolute -bottom-40 -left-24 h-[24rem] w-[24rem] rounded-full bg-secondary-fixed/20 blur-3xl"
+      />
+
       <Toast />
-      <AppHeader />
-      <main className="flex w-full flex-1 flex-col items-center px-margin-mobile py-space-xl pt-16 lg:px-margin-desktop">
-        <div className="mx-auto flex w-full max-w-[1080px] flex-col py-space-md lg:py-space-xl">
-          {children}
-        </div>
-      </main>
-      <AppFooter />
+
+      <div className="relative flex h-[90vh] w-full max-w-[1180px] flex-col overflow-hidden rounded-2xl bg-background font-body-md text-on-surface shadow-rlap-3 sm:h-[85vh] sm:w-[75vw]">
+        <AppHeader />
+        <main className="flex w-full flex-1 flex-col items-center overflow-y-auto px-margin-mobile py-space-lg lg:px-margin-desktop">
+          <div className="mx-auto flex w-full max-w-[1080px] flex-col">{children}</div>
+        </main>
+        <AppFooter />
+      </div>
     </div>
   );
 }

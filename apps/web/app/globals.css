@@ -83,3 +83,28 @@ body {
 .animate-ring-pulse {
   animation: ring-pulse 2.4s ease-out infinite;
 }
+
+@keyframes slide-in-x {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-x {
+  animation: slide-in-x 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-slide-in-x,
+  .animate-fade-in-up,
+  .animate-float-slow,
+  .animate-float-slow-reverse,
+  .animate-ring-pulse {
+    animation: none;
+  }
+}
