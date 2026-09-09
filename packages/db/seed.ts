@@ -1428,6 +1428,221 @@ async function main() {
   await prisma.slot.createMany({ data: slotRows });
 
   // -------------------------------------------------------------------------
+  // Sample bookings — so the admin dashboard/bookings pages have something to
+  // show out of the box, instead of demoing empty. Covers every status and
+  // booking type, across the two radiology+lab centres.
+  // -------------------------------------------------------------------------
+
+  console.log("Creating sample patients and bookings...");
+
+  const ameerpet = centres.find((c) => c.area === "Ameerpet")!;
+  const banjaraHills = centres.find((c) => c.area === "Banjara Hills")!;
+
+  const SAMPLE_PATIENTS: Array<{
+    mobileNumber: string;
+    name: string;
+    dobOrAge: string;
+    gender: "MALE" | "FEMALE" | "OTHER";
+    email?: string;
+  }> = [
+    { mobileNumber: "9876500001", name: "Ananya Sharma", dobOrAge: "34", gender: "FEMALE" },
+    { mobileNumber: "9876500002", name: "Rohit Verma", dobOrAge: "1990-05-12", gender: "MALE" },
+    { mobileNumber: "9876500003", name: "Priya Reddy", dobOrAge: "27", gender: "FEMALE" },
+    { mobileNumber: "9876500004", name: "Karthik Rao", dobOrAge: "45", gender: "MALE" },
+    { mobileNumber: "9876500005", name: "Sneha Iyer", dobOrAge: "31", gender: "FEMALE" },
+    { mobileNumber: "9876500006", name: "Arjun Nair", dobOrAge: "52", gender: "MALE" },
+  ];
+
+  const patients = [];
+  for (const p of SAMPLE_PATIENTS) {
+    patients.push(
+      await prisma.patient.create({
+        data: { organizationId: org.id, ...p },
+      }),
+    );
+  }
+
+  async function slotFor(centreId: string, type: SlotType, daysFromToday: number) {
+    const date = dateOnly(daysFromToday);
+    return prisma.slot.findFirstOrThrow({ where: { centreId, type, date } });
+  }
+
+  function bookingCode(n: number): string {
+    return `RLAP-DEMO${String(n).padStart(3, "0")}`;
+  }
+
+  const usgAbdomen = radiologyByName.get("USG Abdomen")!;
+  const xrayChest = radiologyByName.get("X-Ray Chest PA View")!;
+  const mriBrainForBooking = radiologyByName.get("MRI Brain Plain")!;
+  const ctChest = radiologyByName.get("CT Chest Plain")!;
+  const cbc = labByName.get("Complete Blood Count (CBC)")!;
+  const lipidProfileForBooking = labByName.get("Lipid Profile")!;
+  const hba1c = labByName.get("HbA1c")!;
+  const thyroidProfile = labByName.get("Thyroid Profile (T3, T4, TSH)")!;
+
+  interface SampleBooking {
+    n: number;
+    patient: (typeof patients)[number];
+    centreId: string;
+    status: "PENDING_PAYMENT" | "CONFIRMED" | "COMPLETED" | "CANCELLED";
+    type: "RADIOLOGY" | "LAB" | "COMBINED";
+    paymentMethod: "ONLINE" | "PAY_AT_RECEPTION";
+    collectionMode: "CENTRE_VISIT" | "HOME_COLLECTION" | null;
+    daysFromToday: number;
+    lineItems: Array<{ item: RadiologyExam | LabTest; kind: "RADIOLOGY_EXAM" | "LAB_TEST" }>;
+    slotTypes: SlotType[];
+    safetyFlagged?: boolean;
+  }
+
+  const SAMPLE_BOOKINGS: SampleBooking[] = [
+    {
+      n: 1,
+      patient: patients[0]!,
+      centreId: ameerpet.id,
+      status: "COMPLETED",
+      type: "RADIOLOGY",
+      paymentMethod: "ONLINE",
+      collectionMode: "CENTRE_VISIT",
+      daysFromToday: -3,
+      lineItems: [{ item: usgAbdomen, kind: "RADIOLOGY_EXAM" }],
+      slotTypes: ["RADIOLOGY"],
+    },
+    {
+      n: 2,
+      patient: patients[1]!,
+      centreId: banjaraHills.id,
+      status: "CONFIRMED",
+      type: "RADIOLOGY",
+      paymentMethod: "ONLINE",
+      collectionMode: "CENTRE_VISIT",
+      daysFromToday: 0,
+      lineItems: [{ item: mriBrainForBooking, kind: "RADIOLOGY_EXAM" }],
+      slotTypes: ["RADIOLOGY"],
+      safetyFlagged: false,
+    },
+    {
+      n: 3,
+      patient: patients[2]!,
+      centreId: ameerpet.id,
+      status: "CONFIRMED",
+      type: "LAB",
+      paymentMethod: "PAY_AT_RECEPTION",
+      collectionMode: "HOME_COLLECTION",
+      daysFromToday: 1,
+      lineItems: [
+        { item: cbc, kind: "LAB_TEST" },
+        { item: lipidProfileForBooking, kind: "LAB_TEST" },
+      ],
+      slotTypes: ["HOME_COLLECTION_WINDOW"],
+    },
+    {
+      n: 4,
+      patient: patients[3]!,
+      centreId: ameerpet.id,
+      status: "PENDING_PAYMENT",
+      type: "COMBINED",
+      paymentMethod: "ONLINE",
+      collectionMode: "CENTRE_VISIT",
+      daysFromToday: 2,
+      lineItems: [
+        { item: xrayChest, kind: "RADIOLOGY_EXAM" },
+        { item: hba1c, kind: "LAB_TEST" },
+      ],
+      slotTypes: ["RADIOLOGY", "LAB"],
+    },
+    {
+      n: 5,
+      patient: patients[4]!,
+      centreId: banjaraHills.id,
+      status: "COMPLETED",
+      type: "LAB",
+      paymentMethod: "ONLINE",
+      collectionMode: "CENTRE_VISIT",
+      daysFromToday: -1,
+      lineItems: [{ item: thyroidProfile, kind: "LAB_TEST" }],
+      slotTypes: ["LAB"],
+    },
+    {
+      n: 6,
+      patient: patients[5]!,
+      centreId: ameerpet.id,
+      status: "CANCELLED",
+      type: "RADIOLOGY",
+      paymentMethod: "ONLINE",
+      collectionMode: "CENTRE_VISIT",
+      daysFromToday: 3,
+      lineItems: [{ item: ctChest, kind: "RADIOLOGY_EXAM" }],
+      slotTypes: ["RADIOLOGY"],
+    },
+  ];
+
+  for (const b of SAMPLE_BOOKINGS) {
+    const totalAmount = b.lineItems.reduce((sum, li) => sum + Number(li.item.price), 0);
+    const booking = await prisma.booking.create({
+      data: {
+        bookingCode: bookingCode(b.n),
+        organizationId: org.id,
+        patientId: b.patient.id,
+        centreId: b.centreId,
+        type: b.type,
+        status: b.status,
+        paymentMethod: b.paymentMethod,
+        collectionMode: b.collectionMode,
+        totalAmount,
+        createdAt: new Date(Date.now() + b.daysFromToday * 86400000 - 3600000),
+      },
+    });
+
+    for (const li of b.lineItems) {
+      await prisma.bookingLineItem.create({
+        data: {
+          bookingId: booking.id,
+          itemType: li.kind,
+          radiologyExamId: li.kind === "RADIOLOGY_EXAM" ? li.item.id : null,
+          labTestId: li.kind === "LAB_TEST" ? li.item.id : null,
+          priceAtBooking: Number(li.item.price),
+          source: "MANUAL",
+        },
+      });
+    }
+
+    for (const slotType of b.slotTypes) {
+      const slot = await slotFor(b.centreId, slotType, Math.max(b.daysFromToday, 0));
+      await prisma.bookingSlot.create({
+        data: { bookingId: booking.id, slotId: slot.id, slotType },
+      });
+    }
+
+    if (b.safetyFlagged !== undefined) {
+      await prisma.safetyCheckResponse.createMany({
+        data: [
+          { bookingId: booking.id, questionKey: "PREGNANCY", answer: "NO", flagged: false },
+          { bookingId: booking.id, questionKey: "PACEMAKER", answer: "NO", flagged: false },
+          { bookingId: booking.id, questionKey: "IMPLANTS", answer: "NO", flagged: false },
+          {
+            bookingId: booking.id,
+            questionKey: "ALLERGIES",
+            answer: b.safetyFlagged ? "YES" : "NO",
+            flagged: b.safetyFlagged,
+          },
+        ],
+      });
+    }
+
+    if (b.status === "CONFIRMED" || b.status === "COMPLETED") {
+      await prisma.sentNotification.create({
+        data: {
+          bookingId: booking.id,
+          channel: "SMS",
+          to: `+91${b.patient.mobileNumber}`,
+          subject: null,
+          body: `Your RLAP booking ${booking.bookingCode} is confirmed. Reply HELP for support.`,
+        },
+      });
+    }
+  }
+
+  // -------------------------------------------------------------------------
   // Summary
   // -------------------------------------------------------------------------
 
@@ -1440,6 +1655,8 @@ async function main() {
     centreLabTests: await prisma.centreLabTest.count(),
     serviceableAreas: await prisma.serviceableArea.count(),
     slots: await prisma.slot.count(),
+    patients: await prisma.patient.count(),
+    bookings: await prisma.booking.count(),
   };
   console.log("\nSeed complete:");
   console.table(counts);
