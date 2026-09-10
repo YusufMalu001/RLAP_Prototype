@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Breadcrumb } from "../components/AppHeader";
+import { usePrimaryAction } from "../components/PrimaryAction";
 import { useWidgetStore } from "../lib/store";
 
 const TABS = [
@@ -18,6 +19,12 @@ export function Payment() {
   const loading = useWidgetStore((s) => s.loading);
   const [tab, setTab] = useState<(typeof TABS)[number]["id"]>("UPI");
   const [simulateFailure, setSimulateFailure] = useState(false);
+
+  usePrimaryAction({
+    label: `Verify & Pay ₹${paymentAmount ?? 0}`,
+    onClick: () => void pay(simulateFailure),
+    disabled: loading,
+  });
 
   return (
     <>
@@ -138,15 +145,6 @@ export function Payment() {
                 />
                 Simulate a payment failure (test)
               </label>
-
-              <button
-                disabled={loading}
-                onClick={() => void pay(simulateFailure)}
-                className="flex h-14 w-full items-center justify-center gap-space-sm rounded-xl bg-secondary font-label-lg text-label-lg text-on-secondary shadow-md transition-all hover:bg-on-secondary-container hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <span>Verify &amp; Pay ₹{paymentAmount ?? 0}</span>
-                <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
-              </button>
             </div>
           </div>
         </div>

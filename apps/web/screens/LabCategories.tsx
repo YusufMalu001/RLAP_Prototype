@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Breadcrumb } from "../components/AppHeader";
+import { usePrimaryAction } from "../components/PrimaryAction";
 import { api } from "../lib/apiClient";
 import { cartScreenFor, useWidgetStore } from "../lib/store";
 import type { LabTestSummary } from "../lib/types";
@@ -38,6 +39,15 @@ export function LabCategories() {
   const filteredTests = tests.filter((test) => !test.isPackage);
   const cartCount = cart?.items.length ?? 0;
   const cartSubtotal = cart?.subtotal ?? 0;
+
+  usePrimaryAction(
+    cartCount > 0
+      ? {
+          label: "Proceed to Cart",
+          onClick: () => navigate(cartScreenFor(cart!.cartType)),
+        }
+      : null
+  );
 
   return (
     <>
@@ -166,6 +176,19 @@ export function LabCategories() {
               {filteredTests.length} Tests in Catalogue
             </span>
           </div>
+          {cartCount > 0 ? (
+            <div className="flex items-center justify-between rounded-lg bg-surface-container-low px-space-sm py-space-xs">
+              <span className="font-label-lg text-label-lg font-semibold text-primary">
+                {cartCount === 1 ? "1 Test Selected" : `${cartCount} Tests Selected`}
+              </span>
+              <div className="flex items-center gap-space-xs">
+                <span className="font-caption text-caption text-outline">Subtotal:</span>
+                <span className="font-title-md text-title-md font-bold leading-none text-primary">
+                  ₹{cartSubtotal}
+                </span>
+              </div>
+            </div>
+          ) : null}
           <div className="flex flex-col gap-space-xs">
             {filteredTests.map((test) => {
               const added = addedIds.has(test.id);
@@ -211,43 +234,6 @@ export function LabCategories() {
           </div>
         </section>
       </div>
-
-      {/* Persistent bottom cart tray */}
-      {cartCount > 0 ? (
-        <aside
-          aria-label="Selected tests checkout tray"
-          className="fixed inset-x-0 bottom-0 z-40 bg-surface-container-lowest/95 shadow-[0_-4px_24px_rgba(22,59,72,0.08)] backdrop-blur-md"
-        >
-          <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-space-md px-margin-mobile py-space-sm lg:px-margin-desktop">
-            <div className="flex items-center gap-space-md">
-              <div className="relative flex h-12 w-12 items-center justify-center rounded-lg bg-surface-container-low text-primary">
-                <span className="material-symbols-outlined text-[24px]">shopping_bag</span>
-                <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-secondary font-label-md text-[11px] font-bold text-on-secondary">
-                  {cartCount}
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-label-lg text-label-lg font-semibold text-primary">
-                  {cartCount === 1 ? "1 Test Selected" : `${cartCount} Tests Selected`}
-                </span>
-                <div className="flex items-center gap-space-xs">
-                  <span className="font-caption text-caption text-outline">Subtotal:</span>
-                  <span className="font-title-md text-title-md font-bold leading-none text-primary">
-                    ₹{cartSubtotal}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={() => navigate(cartScreenFor(cart!.cartType))}
-              className="flex min-h-[48px] items-center gap-space-xs rounded-lg bg-secondary px-space-lg py-space-xs font-label-lg text-label-lg text-on-secondary shadow-[0_4px_14px_rgba(224,122,95,0.25)] transition-all hover:bg-secondary/90"
-            >
-              <span>Proceed to Cart</span>
-              <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-            </button>
-          </div>
-        </aside>
-      ) : null}
     </>
   );
 }

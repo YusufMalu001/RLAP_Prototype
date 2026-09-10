@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Breadcrumb } from "../components/AppHeader";
+import { usePrimaryAction } from "../components/PrimaryAction";
 import { useWidgetStore } from "../lib/store";
 
 /** L5a — Home Address & PIN Validation. */
@@ -19,6 +20,32 @@ export function LabHomeAddress() {
 
   const pinChecked = pinCheck !== null && pin.length === 6;
   const canContinue = pinChecked && pinCheck?.serviceable && houseNumber.trim() && street.trim();
+  const isServiceable = Boolean(pinCheck?.serviceable && pin.length === 6);
+
+  // One floating action that reflects whichever step is currently relevant: checking the PIN
+  // (not yet checked, or checked-and-unserviceable — re-checking a different PIN is the way
+  // forward in both) versus saving the address once the PIN is serviceable.
+  usePrimaryAction(
+    isServiceable
+      ? {
+          label: "Confirm Address & Pick Time Slot",
+          onClick: () =>
+            void saveHomeAddress({
+              pinCode: pin,
+              houseNumber,
+              street,
+              landmark: landmark || undefined,
+            }),
+          disabled: !canContinue,
+          loading,
+        }
+      : {
+          label: "Check PIN",
+          onClick: () => void checkPin(pin),
+          disabled: pin.length !== 6 || loading,
+          loading,
+        },
+  );
 
   // Not-serviceable state — matches the dedicated Stitch "PIN Not Serviceable" screen.
   if (pinCheck && pin.length === 6 && !pinCheck.serviceable) {
@@ -77,14 +104,6 @@ export function LabHomeAddress() {
                         className="h-touch-target-min w-full rounded-lg bg-surface-container-lowest pl-11 pr-space-md font-body-md text-on-surface shadow-sm outline-none transition-shadow placeholder:text-outline focus:shadow-md"
                       />
                     </div>
-                    <button
-                      disabled={pin.length !== 6 || loading}
-                      onClick={() => void checkPin(pin)}
-                      className="flex h-touch-target-min shrink-0 items-center justify-center gap-space-2xs rounded-lg bg-primary-container px-space-lg font-label-lg text-on-primary shadow-sm transition-opacity hover:opacity-95 disabled:opacity-40"
-                    >
-                      <span>Check PIN</span>
-                      <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-                    </button>
                   </div>
                 </div>
               </div>
@@ -194,14 +213,6 @@ export function LabHomeAddress() {
                   className="h-touch-target-min w-full rounded-lg bg-surface-bright pl-11 pr-space-md font-label-lg text-primary outline-none transition-all focus:bg-surface-container-lowest focus:shadow-[0_0_0_2px_#163b48]"
                 />
               </div>
-              <button
-                disabled={pin.length !== 6 || loading}
-                onClick={() => void checkPin(pin)}
-                className="flex h-touch-target-min items-center justify-center gap-space-xs rounded-lg bg-primary-container px-space-lg font-label-lg text-on-primary shadow-sm transition-all hover:bg-primary active:scale-[0.98] disabled:opacity-40"
-              >
-                <span className="material-symbols-outlined text-[18px]">travel_explore</span>
-                <span>Check Availability</span>
-              </button>
             </div>
 
             {pinCheck?.serviceable && pin.length === 6 ? (
@@ -339,21 +350,6 @@ export function LabHomeAddress() {
         >
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
           <span>Back to Collection Type</span>
-        </button>
-        <button
-          disabled={!canContinue}
-          onClick={() =>
-            void saveHomeAddress({
-              pinCode: pin,
-              houseNumber,
-              street,
-              landmark: landmark || undefined,
-            })
-          }
-          className="flex h-touch-target-min w-full items-center justify-center gap-space-sm rounded-lg bg-secondary px-space-xl font-label-lg text-label-lg text-on-secondary shadow-[0_4px_14px_rgba(154,68,45,0.25)] transition-all hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
-        >
-          <span>{loading ? "Saving…" : "Confirm Address & Pick Time Slot"}</span>
-          <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
         </button>
       </div>
     </>

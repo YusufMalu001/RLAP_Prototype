@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Breadcrumb } from "../components/AppHeader";
+import { usePrimaryAction } from "../components/PrimaryAction";
 import { useWidgetStore } from "../lib/store";
 
 // Matches the seeded Vijaya Diagnostics catalogue — a real deployment would drive this from
@@ -40,6 +41,16 @@ export function Location() {
   }
 
   const canContinue = Boolean(city && area);
+
+  usePrimaryAction({
+    label: "Search Centres in this Area",
+    onClick: async () => {
+      await setLocation({ city, area });
+      navigate("CENTRE_SELECTION");
+    },
+    disabled: !canContinue || loading,
+    loading,
+  });
 
   return (
     <>
@@ -159,21 +170,6 @@ export function Location() {
                   </span>
                 </div>
               </div>
-            </div>
-
-            <div className="pt-space-xs">
-              <button
-                disabled={!canContinue || loading}
-                onClick={async () => {
-                  await setLocation({ city, area });
-                  navigate("CENTRE_SELECTION");
-                }}
-                className="flex min-h-[52px] w-full cursor-pointer items-center justify-center gap-space-xs rounded-lg bg-secondary font-label-lg text-label-lg text-on-secondary shadow-[0_4px_14px_rgba(154,68,45,0.25)] transition-all hover:bg-on-secondary-container active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
-                type="button"
-              >
-                <span>{loading ? "Searching…" : "Search Centres in this Area"}</span>
-                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-              </button>
             </div>
           </div>
         </div>

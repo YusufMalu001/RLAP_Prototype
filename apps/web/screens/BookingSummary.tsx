@@ -1,6 +1,7 @@
 "use client";
 
 import { Breadcrumb } from "../components/AppHeader";
+import { usePrimaryAction } from "../components/PrimaryAction";
 import { useWidgetStore } from "../lib/store";
 
 /** SC6 — Booking Summary & Payment Method. Pay at Reception hidden entirely unless every item is eligible. */
@@ -10,6 +11,7 @@ export function BookingSummary() {
   const loading = useWidgetStore((s) => s.loading);
 
   if (!summary) {
+    usePrimaryAction(null);
     return (
       <>
         <Breadcrumb section="Checkout" step="Booking Summary" />
@@ -20,6 +22,12 @@ export function BookingSummary() {
 
   const isCombined = summary.schedule.length > 1;
   const orderRef = `#RLAP-${Math.random().toString(36).slice(2, 9).toUpperCase()}`;
+
+  usePrimaryAction({
+    label: `Pay Online Now (₹${summary.total})`,
+    onClick: () => void confirmBooking("ONLINE"),
+    disabled: loading,
+  });
 
   return (
     <>
@@ -185,20 +193,6 @@ export function BookingSummary() {
             </div>
 
             <div className="flex flex-col gap-space-md">
-              <button
-                disabled={loading}
-                onClick={() => void confirmBooking("ONLINE")}
-                className="flex min-h-[56px] w-full flex-col items-center justify-center gap-0.5 rounded-lg bg-secondary px-space-md py-space-sm text-center text-on-secondary shadow-[0_4px_14px_rgba(154,68,45,0.25)] transition-all hover:opacity-95 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <span className="flex items-center gap-space-xs font-label-lg text-label-lg">
-                  <span>Pay Online Now (₹{summary.total})</span>
-                  <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-                </span>
-                <span className="font-caption text-caption opacity-90">
-                  Instant confirmation · UPI, Cards, Net Banking
-                </span>
-              </button>
-
               {summary.payAtReceptionEligible ? (
                 <div className="flex flex-col items-center gap-space-xs pt-space-xs text-center">
                   <button

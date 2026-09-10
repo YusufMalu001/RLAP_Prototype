@@ -1,6 +1,7 @@
 "use client";
 
 import { Breadcrumb } from "../components/AppHeader";
+import { usePrimaryAction } from "../components/PrimaryAction";
 import { useWidgetStore } from "../lib/store";
 
 /** C1 — Combined Cart: two clearly separated sections, one Continue. */
@@ -14,6 +15,12 @@ export function CombinedCart() {
   const labItems = items.filter((i) => i.itemType === "LAB_TEST");
   const radiologySubtotal = radiologyItems.reduce((sum, i) => sum + i.price, 0);
   const labSubtotal = labItems.reduce((sum, i) => sum + i.price, 0);
+
+  usePrimaryAction({
+    label: "Find Centre for Both Services",
+    onClick: () => navigate("LOCATION"),
+    disabled: items.length === 0,
+  });
 
   return (
     <>
@@ -232,20 +239,9 @@ export function CombinedCart() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-space-sm pt-space-xs">
-              <button
-                onClick={() => navigate("LOCATION")}
-                disabled={items.length === 0}
-                className="flex min-h-[52px] w-full items-center justify-center gap-space-sm rounded-lg bg-secondary px-space-lg py-space-sm font-label-lg text-label-lg text-on-secondary shadow-[0_4px_14px_rgba(224,122,95,0.25)] transition-all hover:bg-secondary/90 active:scale-[0.99] disabled:opacity-50"
-                type="button"
-              >
-                <span>Find Centre for Both Services</span>
-                <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-              </button>
-              <p className="text-center font-caption text-caption text-outline">
-                Instant live slot confirmation • Free cancellation up to 2 hours prior
-              </p>
-            </div>
+            <p className="pt-space-xs text-center font-caption text-caption text-outline">
+              Instant live slot confirmation • Free cancellation up to 2 hours prior
+            </p>
           </div>
         </div>
       </div>

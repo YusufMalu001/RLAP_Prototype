@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { ScreenId } from "../lib/store";
 import { useWidgetStore } from "../lib/store";
+import { FloatingPrimaryAction, PrimaryActionProvider } from "./PrimaryAction";
 import { Toast } from "./Toast";
 
 const NAV_TABS = [
@@ -267,10 +268,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Toast />
 
       <div className="relative flex h-[90vh] w-full max-w-[1180px] flex-col overflow-hidden rounded-2xl bg-background font-body-md text-on-surface shadow-rlap-3 sm:h-[85vh] sm:w-[75vw]">
-        <AppHeader />
-        <main className="flex w-full flex-1 flex-col items-center overflow-y-auto px-margin-mobile py-space-lg lg:px-margin-desktop">
-          <div className="mx-auto flex w-full max-w-[1080px] flex-col">{children}</div>
-        </main>
+        <PrimaryActionProvider>
+          <AppHeader />
+          <main className="flex w-full flex-1 flex-col items-center overflow-y-auto px-margin-mobile py-space-lg pb-24 lg:px-margin-desktop">
+            <div className="mx-auto flex w-full max-w-[1080px] flex-col">{children}</div>
+          </main>
+          <FloatingPrimaryAction />
+        </PrimaryActionProvider>
         <AppFooter />
       </div>
     </div>

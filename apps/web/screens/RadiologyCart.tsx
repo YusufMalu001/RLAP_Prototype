@@ -4,6 +4,7 @@ import { CartItemRow } from "../components/CartItemRow";
 import { NudgeCard } from "../components/NudgeCard";
 import { RecommendedLabTests } from "../components/RecommendedLabTests";
 import { Breadcrumb } from "../components/AppHeader";
+import { usePrimaryAction } from "../components/PrimaryAction";
 import { useWidgetStore } from "../lib/store";
 
 /** R4 — Radiology Cart. Also renders OCR-tagged rows inline (§3.5 — no separate O3 screen). */
@@ -12,6 +13,15 @@ export function RadiologyCart() {
   const navigate = useWidgetStore((s) => s.navigate);
   const items = cart?.items ?? [];
   const hasItems = items.length > 0;
+
+  usePrimaryAction(
+    hasItems
+      ? {
+          label: "Find Centre & Time",
+          onClick: () => navigate("LOCATION"),
+        }
+      : null
+  );
 
   return (
     <>
@@ -85,14 +95,6 @@ export function RadiologyCart() {
                 ₹{cart?.subtotal ?? 0}
               </span>
             </div>
-            <button
-              disabled={!hasItems}
-              onClick={() => navigate("LOCATION")}
-              className="flex h-[54px] w-full items-center justify-center gap-space-sm rounded-lg bg-secondary px-space-lg font-label-lg text-label-lg text-on-secondary shadow-[0_4px_14px_rgba(224,122,95,0.25)] transition-all hover:bg-secondary/90 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <span>Find Centre & Time</span>
-              <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-            </button>
           </div>
         </div>
       </div>

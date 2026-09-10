@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Breadcrumb } from "../components/AppHeader";
+import { usePrimaryAction } from "../components/PrimaryAction";
 import { useWidgetStore } from "../lib/store";
 import type { SlotSummary } from "../lib/types";
 
@@ -149,6 +150,13 @@ export function SlotSelection() {
         ).padStart(2, "0")}`
       : null;
 
+  usePrimaryAction({
+    label: "Confirm Slot & Continue",
+    onClick: () => navigate("OTP_VERIFICATION"),
+    disabled: !ready || loading,
+    loading,
+  });
+
   return (
     <>
       <Breadcrumb section="Booking" step="Date & Time" sessionLabel="Step 4 of 4" />
@@ -266,18 +274,6 @@ export function SlotSelection() {
           ) : null}
         </div>
       )}
-
-      <div className="mt-space-lg flex flex-col items-center gap-space-sm sm:flex-row sm:justify-end">
-        <button
-          disabled={!ready || loading}
-          onClick={() => navigate("OTP_VERIFICATION")}
-          className="flex min-h-[52px] w-full items-center justify-center gap-space-xs rounded-xl bg-[#9e4a3b] px-space-xl font-label-lg text-label-lg font-bold text-white shadow-md shadow-[#9e4a3b]/30 transition-all hover:brightness-105 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-          type="button"
-        >
-          <span>{loading ? "Holding…" : "Confirm Slot & Continue"}</span>
-          <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
-        </button>
-      </div>
     </>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Breadcrumb } from "../components/AppHeader";
+import { usePrimaryAction } from "../components/PrimaryAction";
 import { useWidgetStore } from "../lib/store";
 import type { Gender } from "../lib/types";
 
@@ -53,6 +54,12 @@ export function PatientDetails() {
     setGender(null);
     setEmail("");
   }
+
+  usePrimaryAction({
+    label: "Continue to Booking Summary",
+    onClick: handleContinue,
+    disabled: !canContinue || loading,
+  });
 
   const initials = name
     .trim()
@@ -171,14 +178,6 @@ export function PatientDetails() {
               <span className="material-symbols-outlined text-[20px] text-secondary">lock</span>
               <span className="font-caption text-caption text-on-surface-variant">Encrypted patient record</span>
             </div>
-            <button
-              disabled={!canContinue || loading}
-              onClick={handleContinue}
-              className="flex h-touch-target-min w-full items-center justify-center gap-space-xs rounded-xl bg-secondary px-space-xl font-label-lg text-label-lg text-on-secondary shadow-md transition-all hover:bg-on-secondary-container disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-            >
-              <span>Continue to Booking Summary</span>
-              <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-            </button>
           </div>
         </div>
 
@@ -204,14 +203,6 @@ export function PatientDetails() {
               </div>
             ) : null}
 
-            <button
-              disabled={!canContinue || loading}
-              onClick={handleContinue}
-              className="hidden h-touch-target-min w-full items-center justify-center gap-space-xs rounded-xl bg-secondary px-space-lg font-label-lg text-label-lg text-on-secondary shadow-[0_4px_14px_rgba(224,122,95,0.25)] transition-all hover:bg-on-secondary-container active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 lg:flex"
-            >
-              <span>Continue to Booking Summary</span>
-              <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
-            </button>
             <p className="hidden text-center font-caption text-[11px] text-outline lg:block">
               Pay online or choose Private Reception Desk on arrival
             </p>

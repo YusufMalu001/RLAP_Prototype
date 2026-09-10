@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Breadcrumb } from "../components/AppHeader";
+import { usePrimaryAction } from "../components/PrimaryAction";
 import { useWidgetStore } from "../lib/store";
 import type { SafetyCheckAnswers } from "../lib/types";
 
@@ -49,6 +50,13 @@ export function SafetyCheck() {
   const [answers, setAnswers] = useState<Partial<SafetyCheckAnswers>>({});
 
   const allAnswered = QUESTIONS.every((q) => answers[q.key] !== undefined);
+
+  usePrimaryAction({
+    label: "Save & Continue to Instructions",
+    onClick: () => void submitSafetyCheck(answers as SafetyCheckAnswers),
+    disabled: !allAnswered || loading,
+    loading,
+  });
 
   return (
     <>
@@ -140,17 +148,6 @@ export function SafetyCheck() {
             ))}
           </div>
 
-          <div className="flex flex-col items-center justify-end gap-space-md pt-space-sm sm:flex-row">
-            <button
-              disabled={!allAnswered || loading}
-              onClick={() => void submitSafetyCheck(answers as SafetyCheckAnswers)}
-              className="flex min-h-[54px] w-full items-center justify-center gap-space-sm rounded-full bg-secondary px-space-xl font-label-lg text-label-lg text-on-secondary shadow-md transition-all hover:brightness-105 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-              type="button"
-            >
-              <span>{loading ? "Saving…" : "Save & Continue to Instructions"}</span>
-              <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
-            </button>
-          </div>
         </div>
 
         <div className="flex flex-col gap-space-lg lg:col-span-4">

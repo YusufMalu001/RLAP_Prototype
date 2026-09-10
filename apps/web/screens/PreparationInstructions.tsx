@@ -1,6 +1,7 @@
 "use client";
 
 import { Breadcrumb } from "../components/AppHeader";
+import { usePrimaryAction } from "../components/PrimaryAction";
 import { useWidgetStore } from "../lib/store";
 
 /** R8 / L6 / C4 — Preparation Instructions, shown after centre selection, before slot selection. */
@@ -11,6 +12,11 @@ export function PreparationInstructions() {
   const hasRadiology = (preparation?.radiology.length ?? 0) > 0;
   const hasLab = (preparation?.lab.length ?? 0) > 0;
   const isCombined = hasRadiology && hasLab;
+
+  usePrimaryAction({
+    label: "Got it, Continue",
+    onClick: () => navigate("SLOT_SELECTION"),
+  });
 
   return (
     <>
@@ -127,15 +133,6 @@ export function PreparationInstructions() {
               </p>
             </div>
           ) : null}
-
-          <button
-            onClick={() => navigate("SLOT_SELECTION")}
-            className="w-full sm:w-auto self-end inline-flex items-center justify-center gap-space-xs px-space-xl py-space-sm rounded-full bg-secondary text-on-secondary font-label-lg text-label-lg shadow-sm hover:opacity-95 transition-all min-h-[52px]"
-            type="button"
-          >
-            <span>Got it, Continue</span>
-            <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
-          </button>
         </div>
 
         <aside className="lg:col-span-4 flex flex-col gap-space-lg">

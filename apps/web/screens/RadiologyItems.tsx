@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Breadcrumb } from "../components/AppHeader";
+import { usePrimaryAction } from "../components/PrimaryAction";
 import { api } from "../lib/apiClient";
 import { cartScreenFor, useWidgetStore } from "../lib/store";
 import type { RadiologyExamSummary } from "../lib/types";
@@ -30,18 +31,36 @@ export function RadiologyItems() {
   const itemCount = cart?.items.length ?? 0;
   const total = cart?.subtotal ?? 0;
 
+  usePrimaryAction(
+    hasItems
+      ? {
+          label: loading ? "Adding…" : "View Cart",
+          onClick: () => navigate(cartScreenFor(cart?.cartType ?? null)),
+          disabled: loading,
+        }
+      : null
+  );
+
   return (
     <>
       <Breadcrumb section="Radiology" step="Select Exam" />
 
-      <header className="mb-space-lg max-w-3xl">
-        <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-primary tracking-tight md:font-headline-lg md:text-headline-lg">
-          Select your exam
-        </h1>
-        <p className="mt-space-xs font-body-lg text-body-lg text-on-surface-variant">
-          Choose one or more prescribed imaging procedures. You can add as many as needed before
-          continuing.
-        </p>
+      <header className="mb-space-lg flex max-w-3xl flex-col gap-space-sm sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-primary tracking-tight md:font-headline-lg md:text-headline-lg">
+            Select your exam
+          </h1>
+          <p className="mt-space-xs font-body-lg text-body-lg text-on-surface-variant">
+            Choose one or more prescribed imaging procedures. You can add as many as needed before
+            continuing.
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-space-sm rounded-full bg-surface-container-low px-space-md py-space-xs shadow-sm">
+          <span className="material-symbols-outlined text-[18px] text-primary">shopping_bag</span>
+          <span className="font-label-lg text-label-lg font-semibold text-primary">
+            {hasItems ? `${itemCount} exam${itemCount === 1 ? "" : "s"} selected (₹${total})` : "No exams selected yet"}
+          </span>
+        </div>
       </header>
 
       <section className="mb-space-2xl flex flex-col gap-space-md pb-space-2xl">
@@ -112,39 +131,6 @@ export function RadiologyItems() {
           </p>
         ) : null}
       </section>
-
-      <div className="fixed inset-x-0 bottom-6 z-40 flex justify-center px-margin-mobile pointer-events-none">
-        <div className="pointer-events-auto flex w-full max-w-2xl items-center justify-between gap-space-md rounded-2xl bg-surface-container-lowest/95 p-space-sm shadow-xl backdrop-blur-md sm:p-3">
-          <div className="flex items-center gap-space-md pl-space-xs">
-            <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-container text-on-primary">
-              <span className="material-symbols-outlined text-[20px]">shopping_bag</span>
-              {itemCount > 0 ? (
-                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-secondary font-caption text-[11px] font-bold text-on-secondary">
-                  {itemCount}
-                </span>
-              ) : null}
-            </div>
-            <div className="flex flex-col">
-              <span className="font-label-lg text-label-lg font-bold text-primary">
-                {hasItems
-                  ? `${itemCount} exam${itemCount === 1 ? "" : "s"} selected (₹${total})`
-                  : "No exams selected yet"}
-              </span>
-              <span className="font-caption text-caption text-on-surface-variant">
-                Single slot booking optimized
-              </span>
-            </div>
-          </div>
-          <button
-            disabled={!hasItems || loading}
-            onClick={() => navigate(cartScreenFor(cart?.cartType ?? null))}
-            className="flex h-12 shrink-0 items-center gap-space-xs whitespace-nowrap rounded-xl bg-secondary px-space-lg font-label-lg text-label-lg font-bold text-on-secondary shadow-md transition-all hover:opacity-95 disabled:opacity-40"
-          >
-            <span>{loading ? "Adding…" : "View Cart"}</span>
-            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-          </button>
-        </div>
-      </div>
     </>
   );
 }

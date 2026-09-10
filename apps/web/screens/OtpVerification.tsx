@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Breadcrumb } from "../components/AppHeader";
+import { usePrimaryAction } from "../components/PrimaryAction";
 import { useWidgetStore } from "../lib/store";
 
 /** SC4 — Mobile Number & OTP Verification, shared across all booking flows. */
@@ -44,6 +45,12 @@ export function OtpVerification() {
   const seconds = (cooldown % 60).toString().padStart(2, "0");
 
   if (!mobile) {
+    usePrimaryAction({
+      label: "Send OTP",
+      onClick: () => void handleSend(),
+      disabled: mobileInput.length !== 10 || loading,
+    });
+
     return (
       <>
         <Breadcrumb section="Checkout" step="Mobile Number" sessionLabel="RLAP Concierge Gateway" />
@@ -81,15 +88,6 @@ export function OtpVerification() {
               </div>
             </div>
 
-            <button
-              disabled={mobileInput.length !== 10 || loading}
-              onClick={() => void handleSend()}
-              className="flex min-h-[52px] w-full items-center justify-center gap-space-xs rounded-xl bg-secondary px-space-lg py-space-sm font-label-lg text-label-lg text-on-secondary shadow-[0_4px_14px_rgba(154,68,45,0.25)] transition-all hover:bg-on-secondary-container active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <span>Send OTP</span>
-              <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
-            </button>
-
             <div className="relative z-10 flex flex-col items-center gap-space-xs pt-space-md sm:flex-row sm:justify-center sm:gap-space-xs sm:border-t sm:border-surface-container-high sm:pt-space-md">
               <span className="material-symbols-outlined text-[18px] text-primary-container">
                 enhanced_encryption
@@ -103,6 +101,12 @@ export function OtpVerification() {
       </>
     );
   }
+
+  usePrimaryAction({
+    label: "Verify & Proceed",
+    onClick: () => void verifyOtp(code),
+    disabled: code.length !== 6 || loading,
+  });
 
   return (
     <>
@@ -179,17 +183,6 @@ export function OtpVerification() {
                 </button>
               )}
             </div>
-          </div>
-
-          <div className="relative z-10 flex flex-col gap-space-xs pt-space-xs">
-            <button
-              disabled={code.length !== 6 || loading}
-              onClick={() => void verifyOtp(code)}
-              className="flex min-h-[52px] w-full items-center justify-center gap-space-xs rounded-xl bg-secondary px-space-lg py-space-sm font-label-lg text-label-lg text-on-secondary shadow-[0_4px_14px_rgba(224,122,95,0.28)] transition-all hover:bg-on-secondary-container active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <span>Verify &amp; Proceed</span>
-              <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
-            </button>
           </div>
 
           <div className="relative z-10 flex flex-col items-center gap-space-xs pt-space-xs text-center sm:flex-row sm:justify-center">

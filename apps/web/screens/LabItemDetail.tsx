@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Breadcrumb } from "../components/AppHeader";
+import { usePrimaryAction } from "../components/PrimaryAction";
 import { api } from "../lib/apiClient";
 import { cartScreenFor, useWidgetStore } from "../lib/store";
 import type { LabTestDetail } from "../lib/types";
@@ -20,6 +21,23 @@ export function LabItemDetail() {
     api.labTestDetail(orgSlug, testId).then((res) => setTest(res.test));
   }, [orgSlug, testId]);
 
+  const handleAdd = async () => {
+    if (!test) return;
+    await addItem("LAB_TEST", test.id);
+    navigate(cartScreenFor(useWidgetStore.getState().cart?.cartType ?? null));
+  };
+
+  usePrimaryAction(
+    test
+      ? {
+          label: loading ? "Adding…" : `Add to Cart — ₹${test.price}`,
+          onClick: () => void handleAdd(),
+          disabled: loading,
+          icon: "add_shopping_cart",
+        }
+      : null
+  );
+
   if (!test) {
     return (
       <>
@@ -30,11 +48,6 @@ export function LabItemDetail() {
       </>
     );
   }
-
-  const handleAdd = async () => {
-    await addItem("LAB_TEST", test.id);
-    navigate(cartScreenFor(useWidgetStore.getState().cart?.cartType ?? null));
-  };
 
   return (
     <>
@@ -193,24 +206,6 @@ export function LabItemDetail() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Bottom-anchored action deck */}
-      <div className="fixed inset-x-0 bottom-0 z-40 bg-surface/95 px-margin-mobile py-space-sm shadow-[0_-4px_24px_rgba(22,59,72,0.08)] backdrop-blur-xl lg:px-margin-desktop">
-        <div className="mx-auto flex max-w-[1180px] flex-col items-center justify-between gap-space-sm sm:flex-row">
-          <div className="flex flex-col">
-            <span className="font-headline-sm text-headline-sm font-bold text-primary">₹{test.price}</span>
-            <span className="font-caption text-caption text-on-surface-variant">{test.name}</span>
-          </div>
-          <button
-            disabled={loading}
-            onClick={() => void handleAdd()}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-secondary px-space-lg font-label-lg text-label-lg text-on-secondary shadow-md transition-all hover:bg-secondary/90 disabled:opacity-60 sm:w-auto"
-          >
-            <span className="material-symbols-outlined text-[20px]">add_shopping_cart</span>
-            <span>{loading ? "Adding…" : `Add to Cart — ₹${test.price}`}</span>
-          </button>
         </div>
       </div>
     </>

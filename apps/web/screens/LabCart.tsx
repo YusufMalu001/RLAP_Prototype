@@ -3,6 +3,7 @@
 import { Breadcrumb } from "../components/AppHeader";
 import { CartItemRow } from "../components/CartItemRow";
 import { NudgeCard } from "../components/NudgeCard";
+import { usePrimaryAction } from "../components/PrimaryAction";
 import { useWidgetStore } from "../lib/store";
 
 /** L3 — Laboratory Cart. */
@@ -11,6 +12,15 @@ export function LabCart() {
   const navigate = useWidgetStore((s) => s.navigate);
   const items = cart?.items ?? [];
   const subtotal = cart?.subtotal ?? 0;
+
+  usePrimaryAction(
+    items.length === 0
+      ? null
+      : {
+          label: "Continue to Sample Collection",
+          onClick: () => navigate("LAB_COLLECTION_TYPE"),
+        }
+  );
 
   return (
     <>
@@ -98,31 +108,6 @@ export function LabCart() {
           </div>
         </div>
       )}
-
-      {/* Bottom navigation action bar */}
-      <div className="fixed inset-x-0 bottom-0 z-40 bg-surface/95 px-margin-mobile py-space-sm shadow-[0_-4px_24px_rgba(22,59,72,0.08)] backdrop-blur-xl lg:px-margin-desktop">
-        <div className="mx-auto flex max-w-[1180px] flex-col items-center justify-between gap-space-sm sm:flex-row">
-          <div className="flex flex-col text-center sm:text-left">
-            <div className="flex items-center justify-center gap-space-xs sm:justify-start">
-              <span className="font-headline-sm text-headline-sm font-bold text-primary">
-                {items.length} {items.length === 1 ? "Examination" : "Examinations"}
-              </span>
-              <span className="text-outline">•</span>
-              <span className="font-headline-sm text-headline-sm font-bold text-secondary">
-                ₹{subtotal}
-              </span>
-            </div>
-          </div>
-          <button
-            disabled={items.length === 0}
-            onClick={() => navigate("LAB_COLLECTION_TYPE")}
-            className="flex h-[52px] w-full items-center justify-center gap-space-xs rounded-full bg-secondary px-space-xl font-label-lg text-label-lg text-on-secondary shadow-[0_4px_14px_rgba(154,68,45,0.25)] transition-all hover:bg-secondary/90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-          >
-            <span>Continue to Sample Collection</span>
-            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-          </button>
-        </div>
-      </div>
     </>
   );
 }
