@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { ScreenId } from "../lib/store";
-import { useWidgetStore } from "../lib/store";
+import { cartScreenFor, useWidgetStore } from "../lib/store";
 import { FloatingPrimaryAction, PrimaryActionProvider } from "./PrimaryAction";
 import { Toast } from "./Toast";
 
@@ -62,8 +62,14 @@ export function AppHeader() {
   const reset = useWidgetStore((s) => s.reset);
   const navigate = useWidgetStore((s) => s.navigate);
   const orgSlug = useWidgetStore((s) => s.orgSlug);
+  const cart = useWidgetStore((s) => s.cart);
   const router = useRouter();
   const pathname = usePathname();
+
+  // Visible on every screen (not just the cart/browse screens themselves) so it's obvious the
+  // cart is never lost while browsing a different category — items persist in the store
+  // regardless of which screen is showing; this just makes that persistence visible everywhere.
+  const cartItemCount = cart?.items.length ?? 0;
 
   const bookHref = orgSlug ? `/${orgSlug}/book` : null;
   // The booking flow's screen state lives in the store, not the URL — pages outside it (like
@@ -140,6 +146,19 @@ export function AppHeader() {
         </nav>
 
         <div className="flex items-center gap-space-xs">
+          {onBookPage && cartItemCount > 0 ? (
+            <button
+              aria-label={`View cart, ${cartItemCount} item${cartItemCount === 1 ? "" : "s"}`}
+              onClick={() => navigate(cartScreenFor(cart!.cartType))}
+              className="relative flex h-10 w-10 items-center justify-center rounded-full text-primary transition-colors hover:bg-surface-container-high"
+              type="button"
+            >
+              <span className="material-symbols-outlined text-[22px]">shopping_bag</span>
+              <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-secondary px-1 font-caption text-[11px] font-bold leading-none text-on-secondary">
+                {cartItemCount}
+              </span>
+            </button>
+          ) : null}
           <button
             aria-label={onBookPage ? "Close widget" : "Back to booking"}
             onClick={() => {
